@@ -49,14 +49,27 @@ node pruebas/probar_web.cjs
 - `probar_contrato.cjs` crea un `.xlsx` pequeño con la hoja WEB (con `hacer_xlsx.py`), lo lee con SheetJS y comprueba que sale el mismo JSON que los ejemplos, y que cada validación V01 a V18 salta cuando toca. El `.xlsx` queda en la carpeta temporal y se borra.
 - `probar_publicar.cjs` abre `publicar.html` en Chromium con una API de GitHub simulada y publica de verdad contra ella.
 - `probar_web.cjs` recorre la web a 390 px y a 1280 px: buscador, jornadas, grupos, filtro, estados raros y que nada desborde.
+- `probar_excel_real.cjs` necesita un Excel real; ver la sección siguiente.
 
-## Lo que falta comprobar con el Excel real
+## Prueba con el Excel real del SP
 
-Lo anterior usa un `.xlsx` hecho a mano con valores sueltos. Falta, cuando existan `web_export.py` y la hoja WEB de los generadores (W2b):
+`pruebas/probar_excel_real.cjs` lee un Excel de verdad (el del 24º SP y la demo del 23º), con SheetJS y con `publicar.html` en Chromium, y comprueba que el JSON es el mismo que escribe `tools/sp/web_export.py` de `programas-domino`. El Excel se pasa por ruta y no entra nunca en este repositorio.
 
-1. Que SheetJS lea bien los valores guardados de las fórmulas de un Excel 2016 de verdad (celdas con `""`, fechas como texto, `A1` como texto `"1.0"` y no como número).
-2. Que el JSON de `publicar.html` coincida con el de `web_export.py` con el Excel del SP (S0 y S1).
-3. La escritura real contra GitHub con el token del padre (hasta ahora, solo contra una API simulada): permisos, errores 401, 403 y 409 y el origen `github.io`.
-4. El tiempo de lectura en el PC del árbitro (Windows 10, Chrome o Edge, Excel de unos MB).
-5. Que Pages sirva `datos/` con el retraso esperado y que el refresco de 60 segundos vea las publicaciones.
-6. Los casos que los ejemplos no cubren: retirada con grupo B, 100 parejas, 14 jornadas y un individual de 16 partidas.
+```bash
+python3 -I <programas-domino>/tools/sp/web_export.py libro.xlsx /tmp/web --publicado 2026-01-01T00:00:00Z
+node pruebas/probar_excel_real.cjs libro.xlsx /tmp/web/<id>/jornada_NN.json
+```
+
+Resultado con los entregables de W2b (14/11/2026), sin cambiar `publicar.html` ni la web:
+
+1. Valores guardados, vacíos, `A1` y fechas: SheetJS lee las fórmulas con su valor guardado. Las 4.500 celdas que dan `""` salen como `null`, `A1` es el texto `"1.0"` y las fechas son texto `aaaa-mm-dd`.
+2. Mismo JSON: `contrato.js` y `web_export.py` dan el mismo objeto en el 24º (jornada 3 en curso) y en el 23º (14 jornadas, grupo B). `publicar.html` escribe `jornada_NN.json` idéntico, byte a byte, salvo `publicado`. También coinciden en los casos S0–S7 de `programas-domino` (con `--ficticio`, porque sus nombres llevan cifras y V06 los bloquea a propósito) y en las jornadas con incomparecencia, No disputado, descanso, retirada y sustitución.
+3. Tiempo de lectura: unos 0,35 s en Node y de 0,5 a 0,7 s en Chromium desde elegir el archivo hasta la revisión, con Excels de 6 a 6,5 MB. Medido aquí, no en el PC del árbitro.
+
+## Lo que falta comprobar
+
+1. La escritura real contra GitHub con el token del padre (hasta ahora, solo contra una API simulada): permisos, errores 401, 403 y 409 y el origen `github.io`.
+2. El tiempo de lectura en el PC del árbitro (Windows 10, Chrome o Edge). Aquí tarda menos de un segundo, pero la máquina es otra.
+3. Que Pages sirva `datos/` con el retraso esperado y que el refresco de 60 segundos vea las publicaciones.
+4. Un Excel guardado por Excel de verdad. Los de prueba los guarda LibreOffice (y `inject_values.py` pone los valores), así que falta confirmar que Excel 2016 los guarda igual.
+5. Los casos que aún no tienen Excel: una retirada con grupo B, y los programas de parejas e individual (P3b).
