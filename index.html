@@ -3,18 +3,34 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Campeonatos de dominó</title>
-<style>
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, sans-serif; background: #0e3b43; color: #fff; text-align: center; }
-  main { padding: 2rem; }
-  h1 { font-size: 2rem; margin: 0 0 .5rem; }
-  p { margin: 0; opacity: .8; }
-</style>
+<title>tu mesa · resultados de dominó</title>
+<meta name="description" content="Emparejamientos, resultados y clasificaciones de los campeonatos de dominó que lleva la mesa de control.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 16%27%3E%3Crect x=%271%27 y=%271%27 width=%2730%27 height=%2714%27 rx=%274%27 fill=%27%230c3a38%27/%3E%3Cpath d=%27M16 1v14%27 stroke=%27%23fff%27 stroke-width=%272%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/estilo.css">
+<script src="assets/web.js" defer></script>
 </head>
-<body>
+<body data-pagina="portada">
+<header class="portada">
+  <div class="barra-in" style="padding-left:0;padding-right:0;max-width:960px">
+    <a class="marca" href="./" style="margin-left:16px"><span class="ficha-icono" aria-hidden="true"></span>tu mesa <small>resultados de dominó</small></a>
+  </div>
+  <div class="portada-in">
+    <h1>¿Qué mesa te toca?</h1>
+    <p>Emparejamientos, resultados y clasificaciones de los campeonatos de dominó que lleva la mesa de control.</p>
+    <div class="buscador">
+      <label for="buscar">Busca a un jugador</label>
+      <input id="buscar" type="search" autocomplete="off" placeholder="Nombre o apellido">
+      <p class="pista">Verás en qué campeonatos juega y en qué puesto va.</p>
+      <div id="resultados" class="personas" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
 <main>
-  <h1>Campeonatos de dominó</h1>
-  <p>Próximamente: emparejamientos, clasificaciones y resultados.</p>
+  <div id="lista"><p class="vacio">Cargando campeonatos…</p></div>
 </main>
+<footer class="pie"><div class="pie-in">
+  <p><b>Mesa de control: Jesús Eduardo Elián C.</b></p>
+  <p>Los datos los sube la mesa de control y pueden tardar un par de minutos en verse.</p>
+</div></footer>
 </body>
 </html>

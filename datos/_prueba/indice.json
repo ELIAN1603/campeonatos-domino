@@ -1,0 +1,57 @@
+{
+ "version": "1.0",
+ "publicado": "2026-11-14T18:30:00Z",
+ "torneos": [
+  {
+   "id": "parejas-ejemplo-2026-11-14",
+   "nombre": "CAMPEONATO DE PAREJAS DE EJEMPLO",
+   "tipo": "parejas",
+   "temporada": null,
+   "fecha": "2026-11-14",
+   "estado": "en_juego",
+   "jornada_actual": 2,
+   "n_jornadas": 7,
+   "n_participantes": 5,
+   "ganador": null
+  },
+  {
+   "id": "individual-ejemplo-2026-11-14",
+   "nombre": "CAMPEONATO INDIVIDUAL DE EJEMPLO",
+   "tipo": "individual",
+   "temporada": null,
+   "fecha": "2026-11-14",
+   "estado": "en_juego",
+   "jornada_actual": 2,
+   "n_jornadas": 16,
+   "n_participantes": 8,
+   "ganador": null
+  },
+  {
+   "id": "sp-ejemplo",
+   "nombre": "CAMPEONATO SÚPER-PRESTIGIO DE EJEMPLO",
+   "tipo": "sp",
+   "temporada": "2026-27",
+   "fecha": "2026-10-13",
+   "estado": "en_juego",
+   "jornada_actual": 3,
+   "n_jornadas": 14,
+   "n_participantes": 6,
+   "ganador": null
+  },
+  {
+   "id": "sp-ejemplo-anterior",
+   "nombre": "CAMPEONATO SÚPER-PRESTIGIO ANTERIOR (EJEMPLO)",
+   "tipo": "sp",
+   "temporada": "2025-26",
+   "fecha": "2025-10-20",
+   "estado": "terminado",
+   "jornada_actual": 6,
+   "n_jornadas": 6,
+   "n_participantes": 8,
+   "ganador": {
+    "id": 3,
+    "corto": "Pons-Giner"
+   }
+  }
+ ]
+}
