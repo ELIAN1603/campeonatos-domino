@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Publicar · tu mesa</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 16%27%3E%3Crect x=%271%27 y=%271%27 width=%2730%27 height=%2714%27 rx=%274%27 fill=%27%230c3a38%27/%3E%3Cpath d=%27M16 1v14%27 stroke=%27%23fff%27 stroke-width=%272%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/estilo.css">
+<script src="assets/xlsx.mini.min.js" defer></script>
+<script src="assets/contrato.js" defer></script>
+<script src="assets/web.js" defer></script>
+<script src="assets/publicar.js" defer></script>
+</head>
+<body data-pagina="publicar">
+<header class="barra"><div class="barra-in">
+  <a class="marca" href="./"><span class="ficha-icono" aria-hidden="true"></span>tu mesa <small>publicar</small></a>
+  <a class="volver" href="./">Ver la web</a>
+</div></header>
+<main>
+  <h1 style="margin:8px 0 6px">Publicar resultados</h1>
+  <p class="nota">Elige el Excel del campeonato. Esta página lee solo la hoja WEB y lo hace en tu ordenador: el Excel no se sube a ningún sitio. Guarda el Excel antes de elegirlo.</p>
+
+  <section class="paso" id="paso-token" aria-labelledby="t-token">
+    <h2 id="t-token">1. Conexión con GitHub</h2>
+    <div id="token-estado"></div>
+  </section>
+
+  <section class="paso" id="paso-excel" aria-labelledby="t-excel">
+    <h2 id="t-excel">2. El Excel</h2>
+    <label for="archivo" class="solo-lector">Archivo Excel del campeonato</label>
+    <input id="archivo" type="file" accept=".xlsx,.xlsm">
+    <div id="lectura" aria-live="polite"></div>
+  </section>
+
+  <section class="paso" id="paso-revision" aria-labelledby="t-rev" hidden>
+    <h2 id="t-rev">3. Revisión</h2>
+    <div id="revision"></div>
+  </section>
+
+  <section class="paso" id="paso-publicar" aria-labelledby="t-pub" hidden>
+    <h2 id="t-pub">4. Publicar</h2>
+    <div class="acciones"><button class="boton" id="publicar" type="button" disabled>Publicar</button><span id="pub-nota" class="nota" style="margin:0"></span></div>
+    <pre class="registro" id="registro" hidden></pre>
+  </section>
+</main>
+<footer class="pie"><div class="pie-in">
+  <p><b>Mesa de control: Jesús Eduardo Elián C.</b></p>
+  <p>Esta página es solo para la mesa de control. El token se guarda en este navegador y nunca sale de aquí, salvo hacia GitHub.</p>
+</div></footer>
+</body>
+</html>
