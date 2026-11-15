@@ -53,7 +53,7 @@ const D = 'd=datos/_prueba';
     assert(!/en este grupo/.test(nota), nota);
     assert.strictEqual(await pg.locator('.plazo').innerText(), 'Jornada 3 · se juega del 10/11 al 23/11');
     assert(!/Cómo se ordena|criterio|desempate/i.test(await pg.locator('main').innerText()));
-    assert.deepStrictEqual(await pg.locator('nav.pestanas a').allInnerTexts(), ['Clasificación', 'Mesas', 'Parejas', 'Folleto']);
+    assert.deepStrictEqual(await pg.locator('nav.pestanas a').allInnerTexts(), ['Clasificación', 'Mesas', 'Parejas', 'Normativa']);
     bien('clasificación: nota sin recuento, fechas de juego, sin criterios y cuatro pestañas en orden');
     const pendJ3 = JSON.parse(fs.readFileSync('datos/_prueba/sp-ejemplo/actual.json', 'utf8')).clasificacion.filter((r) => r.grupo === 'A' && r.pendiente).length;
     assert.strictEqual(await pg.locator('table.clasi .etq.pend').count(), pendJ3); // ⏳ = pendiente del JSON
@@ -163,7 +163,7 @@ const D = 'd=datos/_prueba';
     assert.strictEqual(await pg.locator('.calendario').count(), 0);
     await sinDesborde('folleto sin calendario'); bien('folleto: sin clave calendario ni PDF no sale calendario y se explica');
     await pg.goto(`${base}/torneo.html?t=sp-ejemplo-anterior&ver=normativa&${D}`);
-    await pg.waitForSelector('text=todavía no ha subido el folleto'); bien('el enlace antiguo ver=normativa abre Folleto');
+    await pg.waitForSelector('text=todavía no ha subido la normativa'); bien('el enlace antiguo ver=normativa abre Normativa');
     errs.length = 0; // los 404 de HEAD de un folleto que no existe son lo esperado
     // el folleto real del 24º: existe y no lleva ni teléfono ni IBAN
     const hr = await pg.request.head(`${base}/datos/sp-2026-27/folleto.pdf`); assert(hr.ok());

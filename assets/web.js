@@ -209,7 +209,7 @@
   /* =====================================================================
      PÁGINA DE TORNEO
      ===================================================================== */
-  const PESTANAS = [['clasificacion', 'Clasificación'], ['mesas', 'Mesas'], ['parejas', 'Parejas'], ['folleto', 'Folleto']];
+  const PESTANAS = [['clasificacion', 'Clasificación'], ['mesas', 'Mesas'], ['parejas', 'Parejas'], ['folleto', 'Normativa']];
   const ANTIGUAS = { emparejamientos: 'mesas', resultados: 'mesas', normativa: 'folleto' }; // enlaces de antes del cambio de pestañas
   const E = { id: null, actual: null, cache: new Map(), ver: 'clasificacion', j: null, g: 'A', p: null, q: '' };
 
@@ -455,13 +455,13 @@
     let hay = false;
     try { hay = (await fetch(ruta, { method: 'HEAD' })).ok; } catch (e) { /* sin red */ }
     if (E.ver !== 'folleto') return;
-    const nombre = `Folleto de ${t.nombre}`;
+    const nombre = `Normativa de ${t.nombre}`;
     poner(cont, calendario(a),
       hay ? el('section', { class: 'folleto' },
-        el('p', null, el('a', { class: 'boton', href: ruta, download: '', rel: 'noopener' }, 'Descargar el folleto (PDF)')),
+        el('p', null, el('a', { class: 'boton', href: ruta, download: '', rel: 'noopener' }, 'Descargar la normativa (PDF)')),
         navigator.pdfViewerEnabled ? el('iframe', { class: 'visor', src: ruta, title: nombre }) : el('p', { class: 'nota' }, 'Este navegador no enseña PDF aquí. Descárgalo con el botón.'))
         : [t.normativa_url ? el('p', null, el('a', { class: 'boton', href: t.normativa_url, rel: 'noopener noreferrer', target: '_blank' }, 'Abrir la normativa')) : null,
-          el('p', { class: 'vacio' }, 'La mesa de control todavía no ha subido el folleto de este campeonato.')]);
+          el('p', { class: 'vacio' }, 'La mesa de control todavía no ha subido la normativa de este campeonato.')]);
   }
 
   /* ----- orquestación ----- */
