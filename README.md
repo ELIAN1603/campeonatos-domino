@@ -81,3 +81,5 @@ Resultado con los entregables de W2b (14/11/2026), sin cambiar `publicar.html` n
 3. Que Pages sirva `datos/` con el retraso esperado y que el refresco de 60 segundos vea las publicaciones.
 4. Un Excel guardado por Excel de verdad. Los de prueba los guarda LibreOffice (y `inject_values.py` pone los valores), así que falta confirmar que Excel 2016 los guarda igual.
 5. Los casos que aún no tienen Excel: una retirada con grupo B, y los programas de parejas e individual (P3b).
+
+Al cambiar `assets/`, sube el `?v=` de los `<link>` y `<script>` de los tres HTML, para que los navegadores no sigan usando la versión guardada (GitHub Pages la cachea 10 minutos).
