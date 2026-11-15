@@ -1,6 +1,7 @@
 // Prueba de la web pública en un navegador: buscador, pestañas, jornadas, ancho de pantalla y refresco.
 // Uso: node pruebas/probar_web.cjs [url-base] [carpeta-de-capturas]
 const assert = require('assert');
+const fs = require('fs');
 const { chromium } = require('playwright');
 const base = process.argv[2] || 'http://localhost:8765';
 const capt = process.argv[3];
@@ -40,14 +41,23 @@ const D = 'd=datos/_prueba';
     assert.strictEqual(await pg.locator('.persona', { hasText: 'Gemma Orts' }).locator('li').count(), 2);
     bien('buscador: Gemma Orts en parejas y en SP');
 
-    // torneo SP en curso: clasificación = última jornada completa
+    // torneo SP en curso (Plan 2.10.2): la clasificación de la J3 en vivo, con ⏳ en quien aún no ha jugado
     await pg.goto(`${base}/torneo.html?t=sp-ejemplo&${D}`);
     await pg.waitForSelector('table.clasi');
-    assert((await pg.locator('.nota.caja').innerText()).includes('jornada 2'));
+    assert((await pg.locator('table.clasi caption').innerText()).includes('jornada 3'));
+    assert((await pg.locator('.nota.caja').innerText()).includes('en juego'));
+    const pendJ3 = JSON.parse(fs.readFileSync('datos/_prueba/sp-ejemplo/actual.json', 'utf8')).clasificacion.filter((r) => r.grupo === 'A' && r.pendiente).length;
+    assert.strictEqual(await pg.locator('table.clasi .etq.pend').count(), pendJ3); // ⏳ = pendiente del JSON
+    assert.strictEqual(await pg.locator('.jornadas button').count(), 3); // las completas y la que está en juego
+    await sinDesborde('clasificación SP'); bien(`clasificación en vivo de la J3 con ⏳ en las ${pendJ3} parejas sin resultado`);
+    await pg.click('.jornadas button:has-text("2")');
+    await pg.waitForFunction(() => document.querySelector('table.clasi caption').textContent.includes('jornada 2'));
     const filas = await pg.locator('table.clasi tbody tr').allInnerTexts();
-    assert(filas[0].includes('Escrivá-Tomás'), filas[0]); // el orden es el de la J2, no el provisional de la J3
-    assert.strictEqual(await pg.locator('.jornadas button').count(), 2); // solo jornadas completas
-    await sinDesborde('clasificación SP'); bien('clasificación = última jornada completa (J2), con aviso de que la J3 está en juego');
+    assert(filas[0].includes('Escrivá-Tomás'), filas[0]);
+    assert.strictEqual(await pg.locator('table.clasi .etq.pend').count(), 0);
+    bien('la J2 (cerrada) se sigue viendo, sin ⏳');
+    await pg.click('.jornadas button:has-text("3")');
+    await pg.waitForFunction(() => document.querySelector('table.clasi caption').textContent.includes('jornada 3'));
     if (capt) await pg.screenshot({ path: `${capt}/clasi_${w}.png`, fullPage: true });
     // los números caben en 390: la columna TF se ve entera
     const caja = await pg.locator('.tabla-caja').boundingBox(); const ult = await pg.locator('table.clasi th:visible').last().boundingBox();

@@ -120,6 +120,7 @@ table.clasi { width: 100%; border-collapse: collapse; font-size: .92rem; }
 tr.resalte td, li.resalte { background: var(--marca-suave); }
 .etq { display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 1px 6px; border-radius: 5px; border: 1.5px solid currentColor; color: var(--tinta2); margin-left: 4px; vertical-align: 1px; }
 .etq.alerta { color: var(--marca); }
+.etq.pend { border: none; padding: 0 2px; font-size: .9rem; letter-spacing: 0; }
 .leyenda { font-size: .82rem; color: var(--tinta2); margin: 10px 2px 0; }
 .criterios { margin: 14px 0 0; padding: 12px 14px; background: var(--papel); border-radius: var(--radio); border: 1px solid var(--linea); }
 .criterios ol { margin: 6px 0 0; padding-left: 22px; }

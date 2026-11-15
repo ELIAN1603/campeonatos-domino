@@ -21,7 +21,7 @@ El formato de los JSON y de la hoja WEB está en `docs/W2_contrato_datos.md` del
 
 ## Cómo decide la web qué enseña
 
-- La clasificación es la de la última jornada completa. Los resultados de la jornada en curso salen en Resultados según llegan, y la clasificación no se reordena hasta que esa jornada se cierra.
+- La clasificación va en vivo, como en el Excel: en cuanto la jornada en curso tiene un resultado, se ve esa jornada, reordenada, con ⏳ en quien aún no ha jugado (`pendiente` del JSON; lleva sus cifras de antes). Mientras no haya ningún resultado, se ve la última jornada cerrada.
 - Cada jornada conserva los nombres que tenía cuando se publicó, así que una sustitución no reescribe las anteriores.
 - Mientras un campeonato está en juego, la página pide `actual.json` cada 60 segundos y se detiene si la pestaña está oculta.
 - Todo texto de los JSON se pinta como texto, nunca como HTML.

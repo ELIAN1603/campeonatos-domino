@@ -230,6 +230,9 @@
 
   const jornadasDe = (a) => (a.jornadas && a.jornadas.length ? a.jornadas : [{ numero: a.jornada.numero, completa: a.jornada.completa, publicado: a.publicado }]).slice().sort((x, y) => x.numero - y.numero);
   const ultimaCompleta = (a) => { const c = jornadasDe(a).filter((j) => j.completa); return c.length ? c[c.length - 1].numero : null; };
+  // En vivo (como el Excel): en cuanto la jornada publicada tiene un resultado, su clasificación es la que se ve,
+  // con ⏳ en quien aún no ha jugado (`pendiente`, cifras de antes). Sin resultados, se ve la última cerrada.
+  const conResultado = (jd) => !jd.jornada.completa && jd.emparejamientos.some((m) => ['jugada', 'incomparecencia', 'nd'].includes(m.estado));
 
   async function datosJornada(n) {
     const a = E.actual;
@@ -271,12 +274,13 @@
   async function pintarClasificacion(cont) {
     const a = E.actual, tp = tipoDe(a.torneo.tipo);
     const ult = ultimaCompleta(a);
-    if (!ult) {
+    const vivo = conResultado(a) ? a.jornada.numero : null;
+    if (!ult && !vivo) {
       cont.replaceChildren(el('p', { class: 'vacio' }, `La clasificación aparecerá cuando se cierre la ${tp.jornada.toLowerCase()} 1.` + (a.jornada.numero === 1 ? ' Mientras tanto, mira los emparejamientos y los resultados que van llegando.' : '')));
       return;
     }
-    const completas = jornadasDe(a).filter((j) => j.completa);
-    const n = completas.some((j) => j.numero === E.j) ? E.j : ult;
+    const completas = jornadasDe(a).filter((j) => j.completa || j.numero === vivo);
+    const n = completas.some((j) => j.numero === E.j) ? E.j : (vivo || ult);
     let jd;
     try { jd = await datosJornada(n); } catch (e) { cont.replaceChildren(el('p', { class: 'aviso alerta' }, 'No se ha podido cargar esa clasificación. Prueba otra vez dentro de un minuto.')); return; }
     if (E.ver !== 'clasificacion') return;
@@ -298,7 +302,8 @@
       return el('tr', { class: (p.ret ? 'ret ' : '') + (E.p === r.id ? 'resalte' : ''), id: 'fila-' + r.id },
         el('td', null, el('span', { class: 'puesto' + (r.puesto <= 3 ? ' p' + r.puesto : '') }, r.puesto)),
         el('td', { class: 'pareja' },
-          el('span', { class: 'nom' }, p.corto, p.ret ? el('span', { class: 'etq alerta' }, 'Retirada') : null),
+          el('span', { class: 'nom' }, p.corto, p.ret ? el('span', { class: 'etq alerta' }, 'Retirada') : null,
+            r.pendiente && !jd.jornada.completa ? el('span', { class: 'etq pend', title: `Todavía no ha jugado la ${tp.jornada.toLowerCase()} ${n}` }, '⏳') : null),
           el('span', { class: 'sub' }, sub2),
           sub ? el('span', { class: 'sub' }, `Cambio en la ${tp.jornada.toLowerCase()} ${sub.desde}: entra ${sub.entra_nombre} ${sub.entra_apellido1} por ${sub.sale_nombre} ${sub.sale_apellido1}`) : null,
           r.desempate ? el('span', { class: 'sub' }, 'Desempate: ' + r.desempate) : null),
@@ -311,11 +316,12 @@
       el('tbody', null, cuerpo));
     const leyenda = cols.map(([, t, ab]) => `${t}: ${ab.toLowerCase()}`).join(' · ');
 
-    const completasUltima = n === ult;
+    const pendientes = filas.filter((r) => r.pendiente).length;
     poner(cont,
       selectorJornada(completas, n, tp, (x) => irA({ j: x }, false)),
       conB ? el('div', { class: 'grupos', role: 'group', 'aria-label': 'Grupo' }, ['A', 'B'].map((x) => el('button', { type: 'button', 'aria-pressed': String(g === x), onclick: () => irA({ g: x }, false) }, 'Grupo ' + x))) : null,
-      !a.jornada.completa && completasUltima ? el('p', { class: 'nota caja' }, `Esta clasificación es la de la ${tp.jornada.toLowerCase()} ${ult}, la última cerrada. La ${tp.jornada.toLowerCase()} ${a.jornada.numero} está en juego: sus resultados salen en la pestaña Resultados y la clasificación cambiará cuando se cierre.`) : null,
+      n === vivo ? el('p', { class: 'nota caja' }, `${tp.jornada} ${n} en juego: la clasificación se reordena con cada resultado. ⏳ = todavía no ha jugado esta ${tp.jornada.toLowerCase()} (lleva sus cifras de antes)` + (pendientes ? `; ${pendientes} en este grupo.` : '.')) : null,
+      n !== vivo && n === ult && !a.jornada.completa && !vivo ? el('p', { class: 'nota caja' }, `Esta clasificación es la de la ${tp.jornada.toLowerCase()} ${ult}, la última cerrada. En cuanto llegue el primer resultado de la ${tp.jornada.toLowerCase()} ${a.jornada.numero}, la clasificación se verá en vivo.`) : null,
       filas.length ? el('div', { class: 'tabla-caja' }, tabla) : el('p', { class: 'vacio' }, 'Este grupo todavía no tiene clasificación.'),
       el('p', { class: 'leyenda' }, leyenda),
       a.torneo.criterios && a.torneo.criterios.length ? el('div', { class: 'criterios' }, el('b', null, 'Cómo se ordena'), el('ol', null, a.torneo.criterios.map((c) => el('li', null, c)))) : null);
@@ -341,7 +347,7 @@
     const marc = tiene ? (sp ? `${m.p_izq}-${m.p_dcha}` : `${m.t_izq}-${m.t_dcha}`) : '';
     const tant = tiene && sp ? `${m.t_izq}-${m.t_dcha} tantos` : '';
     switch (m.estado) {
-      case 'pendiente': return el('div', { class: 'res' }, el('span', { class: 'por' }, 'por jugar'));
+      case 'pendiente': return el('div', { class: 'res' }, el('span', { class: 'por' }, '⏳ por jugar'));
       case 'jugada': return el('div', { class: 'res' }, el('b', null, marc), tant && el('small', null, tant));
       case 'incomparecencia': return el('div', { class: 'res' }, el('b', null, marc), el('small', null, 'incomparecencia'));
       case 'retirada': return el('div', { class: 'res' }, el('b', null, marc), el('small', null, 'rival retirado'));
@@ -410,7 +416,7 @@
       bloques.push(...secciones(() => true, 'Todavía no hay emparejamientos publicados.'));
     } else {
       const hechas = ms.filter((m) => m.estado !== 'pendiente' && m.estado !== 'descanso').length;
-      bloques.push(el('p', { class: 'nota' }, pend ? `Hay ${hechas} ${hechas === 1 ? 'mesa con resultado' : 'mesas con resultado'} y faltan ${pend}. Los resultados salen según llegan; la clasificación no cambia hasta cerrar la ${tp.jornada.toLowerCase()}.` : 'Todas las mesas tienen resultado.'));
+      bloques.push(el('p', { class: 'nota' }, pend ? `Hay ${hechas} ${hechas === 1 ? 'mesa con resultado' : 'mesas con resultado'} y faltan ${pend}. Los resultados salen según llegan y la clasificación se reordena con cada uno (⏳ = aún no ha jugado).` : 'Todas las mesas tienen resultado.'));
       bloques.push(...secciones((m) => m.estado !== 'pendiente', 'Todavía no hay ningún resultado en esta ' + tp.jornada.toLowerCase() + '.'));
       if (pend) {
         bloques.push(el('h2', { class: 'grupo-tit' }, 'Por jugar'));
