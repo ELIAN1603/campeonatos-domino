@@ -30,6 +30,7 @@
     const f = partesFecha(iso);
     return f ? `${f.d} de ${MESES[f.m - 1]} de ${f.a}` : '';
   }
+  const corta = (iso) => { const f = partesFecha(iso); return f ? `${pad(f.d)}/${pad(f.m)}` : ''; };
   function instante(iso) {
     const d = new Date(iso);
     if (isNaN(d)) return '';
@@ -79,12 +80,10 @@
   const ESTADOS = { en_juego: 'En juego', proximo: 'Próximo', terminado: 'Terminado' };
 
   function tarjeta(t) {
-    const f = partesFecha(t.fecha);
     const tp = tipoDe(t.tipo);
     const partes = [`${tp.jornada} ${t.jornada_actual} de ${t.n_jornadas}`, `${t.n_participantes} ${tp.unidades}`];
     if (t.estado === 'terminado' && t.ganador) partes.push(`ganó ${t.ganador.corto}`);
     return el('li', null, el('a', { class: 'tarjeta', href: url('torneo.html', { t: t.id }) },
-      el('div', { class: 'fecha-ficha', 'aria-hidden': 'true' }, el('span', null, f ? MESES[f.m - 1].slice(0, 3) : '?'), el('b', null, f ? f.d : '')),
       el('div', null,
         el('h3', null, t.nombre),
         el('div', { class: 'linea' },
@@ -210,13 +209,15 @@
   /* =====================================================================
      PÁGINA DE TORNEO
      ===================================================================== */
-  const PESTANAS = [['clasificacion', 'Clasificación'], ['emparejamientos', 'Emparejamientos'], ['resultados', 'Resultados'], ['normativa', 'Normativa']];
+  const PESTANAS = [['clasificacion', 'Clasificación'], ['mesas', 'Mesas'], ['resultados', 'Resultados'], ['parejas', 'Parejas'], ['folleto', 'Folleto']];
+  const ANTIGUAS = { emparejamientos: 'mesas', normativa: 'folleto' }; // enlaces de antes del cambio de pestañas
   const E = { id: null, actual: null, cache: new Map(), ver: 'clasificacion', j: null, g: 'A', p: null, q: '' };
 
   function leerUrl() {
     const x = new URLSearchParams(location.search);
     E.id = x.get('t');
-    E.ver = PESTANAS.some((t) => t[0] === x.get('ver')) ? x.get('ver') : 'clasificacion';
+    const v = ANTIGUAS[x.get('ver')] || x.get('ver');
+    E.ver = PESTANAS.some((t) => t[0] === v) ? v : 'clasificacion';
     E.j = +x.get('j') || null;
     E.g = x.get('g') === 'B' ? 'B' : 'A';
     E.p = +x.get('p') || null;
@@ -256,10 +257,17 @@
   }
 
   function pestanas() {
+    const ind = E.actual.torneo.tipo === 'individual';
     $('#pestanas').replaceChildren(...PESTANAS.map(([k, txt]) => el('a', {
       href: url('torneo.html', { t: E.id, ver: k === 'clasificacion' ? '' : k, p: E.p }), 'aria-current': E.ver === k ? 'page' : null,
       onclick: (ev) => { if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return; ev.preventDefault(); irA({ ver: k, j: null }, true); },
-    }, txt)));
+    }, k === 'parejas' && ind ? 'Jugadores' : txt)));
+  }
+
+  // "Jornada N · se juega del dd/mm al dd/mm"; nada si el JSON no trae el plazo
+  function plazo(jd, tp) {
+    const j = jd.jornada, d = corta(j.plazo_desde), h = corta(j.plazo_hasta);
+    return d && h ? el('p', { class: 'plazo' }, `${tp.jornada} ${j.numero} · se juega del ${d} al ${h}`) : null;
   }
 
   function selectorJornada(lista, actualN, tp, alElegir) {
@@ -305,8 +313,7 @@
           el('span', { class: 'nom' }, p.corto, p.ret ? el('span', { class: 'etq alerta' }, 'Retirada') : null,
             r.pendiente && !jd.jornada.completa ? el('span', { class: 'etq pend', title: `Todavía no ha jugado la ${tp.jornada.toLowerCase()} ${n}` }, '⏳') : null),
           el('span', { class: 'sub' }, sub2),
-          sub ? el('span', { class: 'sub' }, `Cambio en la ${tp.jornada.toLowerCase()} ${sub.desde}: entra ${sub.entra_nombre} ${sub.entra_apellido1} por ${sub.sale_nombre} ${sub.sale_apellido1}`) : null,
-          r.desempate ? el('span', { class: 'sub' }, 'Desempate: ' + r.desempate) : null),
+          sub ? el('span', { class: 'sub' }, `Cambio en la ${tp.jornada.toLowerCase()} ${sub.desde}: entra ${sub.entra_nombre} ${sub.entra_apellido1} por ${sub.sale_nombre} ${sub.sale_apellido1}`) : null),
         cols.map(([k, , , x]) => el('td', { class: (x ? 'x ' : '') + (k === 'gan' ? 'gan' : '') }, k === 'dp' || k === 'dt' ? signo(r[k]) : r[k])));
     });
     const tabla = el('table', { class: 'clasi' },
@@ -316,15 +323,14 @@
       el('tbody', null, cuerpo));
     const leyenda = cols.map(([, t, ab]) => `${t}: ${ab.toLowerCase()}`).join(' · ');
 
-    const pendientes = filas.filter((r) => r.pendiente).length;
     poner(cont,
       selectorJornada(completas, n, tp, (x) => irA({ j: x }, false)),
       conB ? el('div', { class: 'grupos', role: 'group', 'aria-label': 'Grupo' }, ['A', 'B'].map((x) => el('button', { type: 'button', 'aria-pressed': String(g === x), onclick: () => irA({ g: x }, false) }, 'Grupo ' + x))) : null,
-      n === vivo ? el('p', { class: 'nota caja' }, `${tp.jornada} ${n} en juego: la clasificación se reordena con cada resultado. ⏳ = todavía no ha jugado esta ${tp.jornada.toLowerCase()} (lleva sus cifras de antes)` + (pendientes ? `; ${pendientes} en este grupo.` : '.')) : null,
+      plazo(jd, tp),
+      n === vivo ? el('p', { class: 'nota caja' }, `${tp.jornada} ${n} en juego: la clasificación se actualiza con cada resultado. ⏳ = todavía no ha jugado esta ${tp.jornada.toLowerCase()} (lleva sus cifras de antes).`) : null,
       n !== vivo && n === ult && !a.jornada.completa && !vivo ? el('p', { class: 'nota caja' }, `Esta clasificación es la de la ${tp.jornada.toLowerCase()} ${ult}, la última cerrada. En cuanto llegue el primer resultado de la ${tp.jornada.toLowerCase()} ${a.jornada.numero}, la clasificación se verá en vivo.`) : null,
       filas.length ? el('div', { class: 'tabla-caja' }, tabla) : el('p', { class: 'vacio' }, 'Este grupo todavía no tiene clasificación.'),
-      el('p', { class: 'leyenda' }, leyenda),
-      a.torneo.criterios && a.torneo.criterios.length ? el('div', { class: 'criterios' }, el('b', null, 'Cómo se ordena'), el('ol', null, a.torneo.criterios.map((c) => el('li', null, c)))) : null);
+      el('p', { class: 'leyenda' }, leyenda));
     const f = E.p && $('#fila-' + E.p);
     if (f && !E.yaDesplazado) { E.yaDesplazado = true; f.scrollIntoView({ block: 'center' }); }
   }
@@ -409,14 +415,14 @@
       return out.length ? out : [el('p', { class: 'vacio' }, vacio)];
     };
     const pend = ms.filter((m) => m.estado === 'pendiente').length;
-    const cabecera = [selectorJornada(lista, n, tp, (x) => irA({ j: x }, false)), filtro()];
+    const cabecera = [selectorJornada(lista, n, tp, (x) => irA({ j: x }, false)), modo === 'emp' ? plazo(jd, tp) : null, filtro()];
     if (modo === 'emp') {
       if (jd.jornada.sorteo && jd.jornada.sin_sortear) bloques.push(el('p', { class: 'nota caja' }, 'El sorteo todavía no se ha hecho: este orden es provisional.'));
       else if (jd.jornada.emparejamiento === 'provisional' && !jd.jornada.completa) bloques.push(el('p', { class: 'nota caja' }, 'Estos emparejamientos todavía no están fijados y pueden cambiar.'));
       bloques.push(...secciones(() => true, 'Todavía no hay emparejamientos publicados.'));
     } else {
       const hechas = ms.filter((m) => m.estado !== 'pendiente' && m.estado !== 'descanso').length;
-      bloques.push(el('p', { class: 'nota' }, pend ? `Hay ${hechas} ${hechas === 1 ? 'mesa con resultado' : 'mesas con resultado'} y faltan ${pend}. Los resultados salen según llegan y la clasificación se reordena con cada uno (⏳ = aún no ha jugado).` : 'Todas las mesas tienen resultado.'));
+      bloques.push(el('p', { class: 'nota' }, pend ? `Hay ${hechas} ${hechas === 1 ? 'mesa con resultado' : 'mesas con resultado'} y faltan ${pend}. Los resultados salen según llegan y la clasificación se actualiza con cada uno (⏳ = aún no ha jugado).` : 'Todas las mesas tienen resultado.'));
       bloques.push(...secciones((m) => m.estado !== 'pendiente', 'Todavía no hay ningún resultado en esta ' + tp.jornada.toLowerCase() + '.'));
       if (pend) {
         bloques.push(el('h2', { class: 'grupo-tit' }, 'Por jugar'));
@@ -427,33 +433,52 @@
     aplicarFiltro();
     const m = !E.yaDesplazado && $('#mesa-mia'); if (m) { E.yaDesplazado = true; m.scrollIntoView({ block: 'center' }); }
   }
-  const modo_ver = (m) => (m === 'emp' ? 'emparejamientos' : 'resultados');
+  const modo_ver = (m) => (m === 'emp' ? 'mesas' : 'resultados');
 
-  /* ----- normativa ----- */
-  function pintarNormativa(cont) {
-    const a = E.actual, t = a.torneo, tp = tipoDe(t.tipo), j = a.jornada;
-    const jn = tp.jornada.toLowerCase();
-    const sp = t.tipo === 'sp';
-    const bloques = [];
-    bloques.push(t.normativa_url
-      ? el('p', null, el('a', { class: 'boton', href: t.normativa_url, rel: 'noopener noreferrer', target: '_blank' }, 'Abrir la normativa'))
-      : el('p', { class: 'vacio' }, 'La mesa de control todavía no ha enlazado la normativa de este campeonato.'));
-    const crit = (t.criterios || []);
-    bloques.push(el('div', { class: 'texto' },
-      el('h2', null, 'Cómo se ordena la clasificación'), crit.length ? el('ol', null, crit.map((c) => el('li', null, c))) : el('p', null, 'Sin criterios publicados.'),
-      sp ? el('p', null, 'El criterio informático es el último desempate. Tras la 1.ª jornada gana la pareja que jugó en la mesa de número más bajo; en las siguientes, la que iba delante en la clasificación anterior.') : null,
-      el('h2', null, 'Qué significan las marcas de las mesas'),
-      el('ul', null,
-        el('li', null, el('b', null, 'Descanso. '), `Si el número es impar, una ${tp.unidad} no tiene rival. Se le anotan ${sp ? '2-0 y' : ''} ${t.puntos_ausencia}-0.`.replace('  ', ' ')),
-        el('li', null, el('b', null, 'Incomparecencia. '), `Gana quien se presenta: ${sp ? '2-0 y ' : ''}${t.puntos_ausencia}-0.`),
-        el('li', null, el('b', null, 'Retirada. '), `Lo jugado antes se conserva. Mientras siga emparejada, su rival gana ${sp ? '2-0 y ' : ''}${t.puntos_ausencia}-0.`),
-        sp ? el('li', null, el('b', null, 'No disputado (ND). '), 'Las dos parejas pierden el encuentro. A cada una se le anota 0-2 y 0-300, cuenta como jugado y nadie gana.') : null,
-        t.tipo === 'individual' ? el('li', null, el('b', null, 'Falta alguien. '), `Los presentes ganan ${t.puntos_ausencia}-0 y quien falta pierde 0-${t.puntos_ausencia}.`) : null),
-      t.hay_b ? [el('h2', null, 'Grupo B'), el('p', null, `Desde la ${jn} ${t.jornada_b} hay dos grupos. Pasan al B las últimas ${t.n_b} ${tp.unidades} de la clasificación. El B empieza de cero y tiene su propio sorteo.`)] : null,
-      sp ? [el('h2', null, 'Sustituciones'), el('p', null, 'Si un jugador cambia, la pareja conserva su número y sus puntos. El nombre nuevo se ve desde la jornada del cambio; las jornadas anteriores siguen con el nombre de entonces.')] : null,
-      j.plazo_desde && j.plazo_hasta ? [el('h2', null, `Plazo de la ${jn} ${j.numero}`), el('p', null, `Del ${fechaLarga(j.plazo_desde)} al ${fechaLarga(j.plazo_hasta)}.`)] : null,
-      el('h2', null, 'Contacto'), el('p', null, `${t.contacto || 'Jesús Eduardo Elián C.'}, mesa de control.`)));
-    poner(cont, ...bloques);
+  /* ----- parejas ----- */
+  function pintarParejas(cont) {
+    const a = E.actual, tp = tipoDe(a.torneo.tipo);
+    const ps = a.participantes.slice().sort((x, y) => x.id - y.id);
+    if (!ps.length) { cont.replaceChildren(el('p', { class: 'vacio' }, `Todavía no hay ${tp.unidades} publicadas.`)); return; }
+    const hayB = ps.some((p) => p.grupo === 'B');
+    cont.replaceChildren(el('div', { class: 'tabla-caja' }, el('table', { class: 'lista-parejas' },
+      el('caption', { class: 'solo-lector' }, `${tp.unidades[0].toUpperCase() + tp.unidades.slice(1)} inscritas`),
+      el('thead', null, el('tr', null, el('th', { scope: 'col' }, 'Nº'), el('th', { scope: 'col' }, tp.unidades === 'jugadores' ? 'Jugador' : 'Jugadores'), el('th', { scope: 'col' }, 'Zona'))),
+      el('tbody', null, ps.map((p) => el('tr', { class: p.ret ? 'ret' : null },
+        el('td', { class: 'n' }, p.id),
+        el('td', null, [[p.j1_nombre, p.j1_apellido1], [p.j2_nombre, p.j2_apellido1]].filter((x) => x[0]).map((x) => el('span', { class: 'nom' }, x.join(' '))),
+          p.ret ? el('span', { class: 'etq alerta' }, 'Retirada') : null, hayB ? el('span', { class: 'etq' }, 'Grupo ' + p.grupo) : null),
+        el('td', { class: 'zona' }, p.zona)))))));
+  }
+
+  /* ----- folleto: calendario + PDF ----- */
+  function calendario(a) {
+    const filas = (Array.isArray(a.calendario) ? a.calendario : []).filter((c) => c && Number.isInteger(c.jornada) && corta(c.desde) && corta(c.hasta));
+    if (!filas.length) return null;
+    const tp = tipoDe(a.torneo.tipo), curso = a.torneo.estado === 'terminado' ? null : a.jornada.numero;
+    return el('section', { class: 'calendario' }, el('h2', null, 'Calendario'),
+      el('ol', null, filas.map((c) => el('li', { class: c.jornada === curso ? 'curso' : null, 'aria-current': c.jornada === curso ? 'step' : null },
+        el('span', { class: 'num' }, el('small', null, tp.jornada), c.jornada, c.jornada_b != null ? el('b', { class: 'b' }, 'B' + c.jornada_b) : null),
+        el('span', { class: 'fechas' }, `${corta(c.desde)} – ${corta(c.hasta)}`)))));
+  }
+  // El PDF vive en datos/<id>/folleto.pdf; `torneo.folleto` (opcional) puede dar otro nombre de archivo o un https.
+  function rutaFolleto(t) {
+    const f = t.folleto;
+    if (/^https:\/\/\S+$/.test(f || '')) return f;
+    return `${BASE}/${E.id}/${/^[\w.-]+\.pdf$/.test(f || '') ? f : 'folleto.pdf'}`;
+  }
+  async function pintarFolleto(cont) {
+    const a = E.actual, t = a.torneo, ruta = rutaFolleto(t);
+    let hay = false;
+    try { hay = (await fetch(ruta, { method: 'HEAD' })).ok; } catch (e) { /* sin red */ }
+    if (E.ver !== 'folleto') return;
+    const nombre = `Folleto de ${t.nombre}`;
+    poner(cont, calendario(a),
+      hay ? el('section', { class: 'folleto' },
+        el('p', null, el('a', { class: 'boton', href: ruta, download: '', rel: 'noopener' }, 'Descargar el folleto (PDF)')),
+        navigator.pdfViewerEnabled ? el('iframe', { class: 'visor', src: ruta, title: nombre }) : el('p', { class: 'nota' }, 'Este navegador no enseña PDF aquí. Descárgalo con el botón.'))
+        : [t.normativa_url ? el('p', null, el('a', { class: 'boton', href: t.normativa_url, rel: 'noopener noreferrer', target: '_blank' }, 'Abrir la normativa')) : null,
+          el('p', { class: 'vacio' }, 'La mesa de control todavía no ha subido el folleto de este campeonato.')]);
   }
 
   /* ----- orquestación ----- */
@@ -464,9 +489,10 @@
     const cont = $('#contenido');
     if (marca !== pintando) return;
     if (E.ver === 'clasificacion') await pintarClasificacion(cont);
-    else if (E.ver === 'emparejamientos') await pintarMesas(cont, 'emp');
+    else if (E.ver === 'mesas') await pintarMesas(cont, 'emp');
     else if (E.ver === 'resultados') await pintarMesas(cont, 'res');
-    else pintarNormativa(cont);
+    else if (E.ver === 'parejas') pintarParejas(cont);
+    else await pintarFolleto(cont);
   }
 
   async function sondear() {

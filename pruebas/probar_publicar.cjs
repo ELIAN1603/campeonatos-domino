@@ -14,7 +14,7 @@ const sinPub = (o) => { const c = JSON.parse(JSON.stringify(o)); delete c.public
 (async () => {
   const repo = new Map(); // ruta -> {sha, texto}
   let n = 0; const puts = [];
-  repo.set('datos/indice.json', { sha: 's' + ++n, texto: fs.readFileSync(path.join(raiz, 'datos/indice.json'), 'utf8') });
+  repo.set('datos/indice.json', { sha: 's' + ++n, texto: JSON.stringify({ version: '1.0', publicado: '2026-01-01T00:00:00Z', torneos: [] }, null, 1) + '\n' }); // repo simulado: parte de un índice vacío, no del real
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 1000, height: 900 } });
   const pg = await ctx.newPage();

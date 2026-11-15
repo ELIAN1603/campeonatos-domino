@@ -20,6 +20,9 @@ const D = 'd=datos/_prueba';
     await pg.waitForSelector('.tarjeta');
     assert.strictEqual(await pg.locator('.tarjeta').count(), 4);
     await sinDesborde('portada'); bien('portada: 4 campeonatos sin desbordar');
+    assert.strictEqual(await pg.locator('.fecha-ficha').count(), 0);
+    assert(!/\b(oct|nov|ene|feb)\b/i.test(await pg.locator('#lista').innerText()), 'queda la marca de fecha');
+    bien('portada: sin la fecha de inicio en las tarjetas');
     // buscador: un jugador en dos torneos
     await pg.fill('#buscar', 'pons');
     await pg.waitForSelector('.persona .puesto:not(:text("…"))');
@@ -45,7 +48,13 @@ const D = 'd=datos/_prueba';
     await pg.goto(`${base}/torneo.html?t=sp-ejemplo&${D}`);
     await pg.waitForSelector('table.clasi');
     assert((await pg.locator('table.clasi caption').innerText()).includes('jornada 3'));
-    assert((await pg.locator('.nota.caja').innerText()).includes('en juego'));
+    const nota = await pg.locator('.nota.caja').innerText();
+    assert(nota.includes('en juego') && nota.includes('la clasificación se actualiza con cada resultado'), nota);
+    assert(!/en este grupo/.test(nota), nota);
+    assert.strictEqual(await pg.locator('.plazo').innerText(), 'Jornada 3 · se juega del 10/11 al 23/11');
+    assert(!/Cómo se ordena|criterio|desempate/i.test(await pg.locator('main').innerText()));
+    assert.deepStrictEqual(await pg.locator('nav.pestanas a').allInnerTexts(), ['Clasificación', 'Mesas', 'Resultados', 'Parejas', 'Folleto']);
+    bien('clasificación: nota sin recuento, fechas de juego, sin criterios y cinco pestañas en orden');
     const pendJ3 = JSON.parse(fs.readFileSync('datos/_prueba/sp-ejemplo/actual.json', 'utf8')).clasificacion.filter((r) => r.grupo === 'A' && r.pendiente).length;
     assert.strictEqual(await pg.locator('table.clasi .etq.pend').count(), pendJ3); // ⏳ = pendiente del JSON
     assert.strictEqual(await pg.locator('.jornadas button').count(), 3); // las completas y la que está en juego
@@ -69,9 +78,21 @@ const D = 'd=datos/_prueba';
     bien('selector de jornada: J1');
     // nombres de entonces: Pons-Dols en J2, Pons-Mas en la J3 publicada
     assert((await pg.locator('table.clasi').innerText()).includes('Pons-Dols'));
-    await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=emparejamientos&${D}`);
+    await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=mesas&${D}`);
     await pg.waitForSelector('li.mesa');
     assert((await pg.locator('ul.mesas').innerText()).includes('Pons-Mas'));
+    assert.strictEqual(await pg.locator('.plazo').innerText(), 'Jornada 3 · se juega del 10/11 al 23/11');
+    await pg.click('.jornadas button:has-text("1")');
+    await pg.waitForFunction(() => document.querySelector('.plazo').textContent.startsWith('Jornada 1'));
+    assert.strictEqual(await pg.locator('.plazo').innerText(), 'Jornada 1 · se juega del 13/10 al 26/10');
+    await pg.click('.jornadas button:has-text("3")');
+    await pg.waitForSelector('.plazo');
+    bien('mesas: fechas de juego de la jornada elegida');
+    await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=emparejamientos&${D}`);
+    await pg.waitForSelector('li.mesa'); assert(await pg.locator('nav.pestanas a[aria-current=page]').innerText() === 'Mesas');
+    bien('el enlace antiguo ver=emparejamientos abre Mesas');
+    await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=mesas&${D}`);
+    await pg.waitForSelector('li.mesa');
     await pg.click('.jornadas button:has-text("2")');
     await pg.waitForFunction(() => document.querySelector('ul.mesas').innerText.includes('Pons-Dols'));
     bien('las jornadas pasadas conservan el nombre de entonces (Pons-Dols en J2, Pons-Mas en J3)');
@@ -94,10 +115,45 @@ const D = 'd=datos/_prueba';
     assert(await pg.locator('text=Por jugar').first().isVisible());
     await sinDesborde('resultados'); bien('resultados de la J3 en curso visibles y la mesa sin resultado como "por jugar"');
     if (capt) await pg.screenshot({ path: `${capt}/res_${w}.png`, fullPage: true });
-    await pg.click('nav.pestanas a:has-text("Normativa")');
-    await pg.waitForSelector('text=Cómo se ordena la clasificación');
-    await sinDesborde('normativa'); bien('normativa');
-    if (capt) await pg.screenshot({ path: `${capt}/norm_${w}.png`, fullPage: true });
+    // parejas: nº, nombres, zona; nunca teléfonos
+    await pg.click('nav.pestanas a:has-text("Parejas")');
+    await pg.waitForSelector('table.lista-parejas');
+    const ap = JSON.parse(fs.readFileSync('datos/_prueba/sp-ejemplo/actual.json', 'utf8')).participantes;
+    assert.strictEqual(await pg.locator('table.lista-parejas tbody tr').count(), ap.length);
+    const f1 = await pg.locator('table.lista-parejas tbody tr').first().innerText();
+    assert(f1.includes(`${ap[0].j1_nombre} ${ap[0].j1_apellido1}`) && f1.includes(`${ap[0].j2_nombre} ${ap[0].j2_apellido1}`) && f1.includes(ap[0].zona), f1);
+    assert(!/\d{9}|tel[eé]f|licencia/i.test(await pg.locator('main').innerText()));
+    await sinDesborde('parejas'); bien(`parejas: ${ap.length} filas con nº, los dos jugadores y zona; sin teléfonos`);
+    if (capt) await pg.screenshot({ path: `${capt}/parejas_${w}.png`, fullPage: true });
+    // folleto: calendario completo con la jornada en curso resaltada y PDF
+    await pg.goto(`${base}/torneo.html?t=sp-calendario&ver=folleto&${D}`); // actual.json de ejemplo con la clave "calendario" y su PDF
+    await pg.waitForSelector('.calendario li');
+    assert.strictEqual(await pg.locator('.calendario li').count(), 14);
+    assert.strictEqual(await pg.locator('.calendario li.curso').count(), 1);
+    assert((await pg.locator('.calendario li.curso').innerText()).replace(/\s+/g, ' ').includes('3 '), 'la jornada 3 debe estar resaltada');
+    assert.deepStrictEqual(await pg.locator('.calendario .b').allInnerTexts(), ['B1', 'B2', 'B3']);
+    assert((await pg.locator('.calendario li').nth(2).innerText()).includes('10/11 – 23/11'));
+    const enl = pg.locator('a[download]'); assert((await enl.getAttribute('href')).endsWith('sp-calendario/folleto.pdf'));
+    const visor = await pg.evaluate(() => !!navigator.pdfViewerEnabled);
+    assert.strictEqual(await pg.locator('iframe.visor').count(), visor ? 1 : 0);
+    await sinDesborde('folleto'); bien(`folleto con calendario (14 jornadas, B1-B3, J3 resaltada), descarga y ${visor ? 'vista integrada' : 'sin vista integrada (el navegador no enseña PDF)'}`);
+    if (capt) await pg.screenshot({ path: `${capt}/folleto_${w}.png`, fullPage: true });
+    // sin "calendario" en el JSON, y sin PDF
+    await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=folleto&${D}`);
+    await pg.waitForSelector('text=todavía no ha subido el folleto'); assert.strictEqual(await pg.locator('.calendario').count(), 0);
+    await pg.goto(`${base}/torneo.html?t=sp-ejemplo-anterior&ver=folleto&${D}`);
+    await pg.waitForSelector('text=todavía no ha subido el folleto');
+    assert.strictEqual(await pg.locator('.calendario').count(), 0);
+    await sinDesborde('folleto sin calendario'); bien('folleto: sin clave calendario ni PDF no sale calendario y se explica');
+    await pg.goto(`${base}/torneo.html?t=sp-ejemplo-anterior&ver=normativa&${D}`);
+    await pg.waitForSelector('text=todavía no ha subido el folleto'); bien('el enlace antiguo ver=normativa abre Folleto');
+    errs.length = 0; // los 404 de HEAD de un folleto que no existe son lo esperado
+    // el folleto real del 24º: existe y no lleva ni teléfono ni IBAN
+    const hr = await pg.request.head(`${base}/datos/sp-2026-27/folleto.pdf`); assert(hr.ok());
+    try {
+      const t = require('child_process').execFileSync('pdftotext', ['datos/sp-2026-27/folleto.pdf', '-'], { encoding: 'utf8' });
+      assert(!/611|692|ES76|3159|IBAN/i.test(t)); bien('folleto real del 24º sin teléfono ni IBAN (pdftotext)');
+    } catch (e) { if (e.code !== 'ENOENT') throw e; }
 
     // torneo terminado con grupo B, ND, incomparecencia
     await pg.goto(`${base}/torneo.html?t=sp-ejemplo-anterior&${D}`);
@@ -114,25 +170,32 @@ const D = 'd=datos/_prueba';
     assert((await pg.locator('body').innerText()).includes('no disputado'));
     await sinDesborde('ND'); bien('encuentro No disputado visible');
     // retirada y descanso del parejas
-    await pg.goto(`${base}/torneo.html?t=parejas-ejemplo-2026-11-14&ver=emparejamientos&${D}`);
+    await pg.goto(`${base}/torneo.html?t=parejas-ejemplo-2026-11-14&ver=mesas&${D}`);
     await pg.waitForSelector('li.mesa'); assert((await pg.locator('body').innerText()).toLowerCase().includes('descansa'));
-    bien('descanso en parejas');
+    assert.strictEqual(await pg.locator('.plazo').count(), 0);
+    bien('descanso en parejas, sin fechas de juego (su JSON no las trae)');
     // individual: dos y dos
-    await pg.goto(`${base}/torneo.html?t=individual-ejemplo-2026-11-14&ver=emparejamientos&${D}`);
+    await pg.goto(`${base}/torneo.html?t=individual-ejemplo-2026-11-14&ver=mesas&${D}`);
     await pg.waitForSelector('li.mesa'); assert.strictEqual(await pg.locator('li.mesa').first().locator('.lado .n').count(), 4);
+    assert.strictEqual(await pg.locator('nav.pestanas a').nth(3).innerText(), 'Jugadores');
     await sinDesborde('individual'); bien('individual: 2 jugadores contra 2');
+    // con un navegador que enseña PDF, el visor va integrado
+    await pg.addInitScript(() => Object.defineProperty(navigator, 'pdfViewerEnabled', { get: () => true }));
+    await pg.goto(`${base}/torneo.html?t=sp-calendario&ver=folleto&${D}`);
+    await pg.waitForSelector('iframe.visor'); await sinDesborde('visor'); bien('folleto: vista integrada cuando el navegador enseña PDF');
     // enlace del buscador resalta la fila
-    await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=emparejamientos&p=3&${D}`);
+    await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=mesas&p=3&${D}`);
     await pg.waitForSelector('li.mesa.resalte'); bien('?p= resalta la mesa del jugador');
     assert.deepStrictEqual(errs, []); errs.length = 0;
     // inexistente (el 404 es lo esperado)
     await pg.goto(`${base}/torneo.html?t=no-existe&${D}`);
     await pg.waitForSelector('text=No se ha encontrado este campeonato'); bien('campeonato inexistente: mensaje llano'); errs.length = 0;
-    // sin ?d= : datos reales (vacíos)
+    // sin ?d= : datos reales
     await pg.goto(`${base}/index.html`);
-    await pg.waitForSelector('text=Todavía no hay campeonatos publicados');
+    await pg.waitForSelector('.tarjeta');
     assert.strictEqual(await pg.locator('.banda-prueba').count(), 0);
-    bien('portada real (main): lista vacía y sin banda de prueba');
+    assert.strictEqual(await pg.locator('.fecha-ficha').count(), 0);
+    bien('portada real: sin banda de prueba y sin fecha de inicio');
     assert.deepStrictEqual(errs, []);
     await ctx.close();
   }

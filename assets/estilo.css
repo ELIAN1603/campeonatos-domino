@@ -55,13 +55,10 @@ h2.seccion { font-size: 1.05rem; text-transform: uppercase; letter-spacing: .08e
 .vacio, .aviso { background: var(--papel); border: 1px dashed var(--linea); border-radius: var(--radio); padding: 16px; color: var(--tinta2); }
 .aviso.alerta { background: var(--aviso-fondo); color: var(--aviso-texto); border-style: solid; border-color: transparent; }
 
-/* tarjeta de campeonato: la fecha va en una ficha vertical */
+/* tarjeta de campeonato */
 .tarjetas { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.tarjeta { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; background: var(--papel); border: 1px solid var(--linea); border-radius: var(--radio); padding: 12px; text-decoration: none; }
+.tarjeta { display: block; background: var(--papel); border: 1px solid var(--linea); border-radius: var(--radio); padding: 12px; text-decoration: none; }
 .tarjeta:hover { border-color: var(--marca); }
-.fecha-ficha { width: 52px; border: 2px solid var(--tinta); border-radius: 7px; text-align: center; overflow: hidden; line-height: 1; }
-.fecha-ficha span { display: block; padding: 5px 0; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
-.fecha-ficha b { display: block; padding: 7px 0 6px; font-size: 1.35rem; border-top: 2px solid var(--tinta); }
 .tarjeta h3 { margin: 0 0 3px; font-size: 1.05rem; line-height: 1.25; }
 .tarjeta .linea { color: var(--tinta2); font-size: .9rem; }
 .etiqueta { display: inline-block; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; padding: 2px 8px; border-radius: 99px; border: 1.5px solid var(--tinta2); color: var(--tinta2); margin-right: 6px; vertical-align: middle; }
@@ -83,8 +80,11 @@ h2.seccion { font-size: 1.05rem; text-transform: uppercase; letter-spacing: .08e
 .cab h1 { font-size: clamp(1.5rem, 6vw, 2.3rem); line-height: 1.1; margin: 8px 0 6px; letter-spacing: -.02em; font-weight: 800; }
 .cab .linea { color: var(--tinta2); margin: 0; }
 .cab .sello { color: var(--tinta2); font-size: .82rem; margin: 6px 0 0; }
-.pestanas { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 18px 0 14px; }
-.pestanas a { padding: 10px 8px; text-align: center; text-decoration: none; font-weight: 700; border-radius: 8px; border: 1.5px solid var(--tinta); }
+.pestanas { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 18px 0 14px; }
+.pestanas a { grid-column: span 2; }
+.pestanas a:nth-child(n+4) { grid-column: span 3; }
+@media (min-width: 640px) { .pestanas { grid-template-columns: repeat(5, 1fr); } .pestanas a, .pestanas a:nth-child(n+4) { grid-column: auto; } }
+.pestanas a { padding: 10px 4px; text-align: center; text-decoration: none; font-weight: 700; border-radius: 8px; border: 1.5px solid var(--tinta); }
 .pestanas a[aria-current="page"] { background: var(--tinta); color: var(--fondo); }
 .jornadas { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 12px; }
 .jornadas .rot { font-size: .85rem; font-weight: 700; color: var(--tinta2); margin-right: 4px; }
@@ -122,9 +122,6 @@ tr.resalte td, li.resalte { background: var(--marca-suave); }
 .etq.alerta { color: var(--marca); }
 .etq.pend { border: none; padding: 0 2px; font-size: .9rem; letter-spacing: 0; }
 .leyenda { font-size: .82rem; color: var(--tinta2); margin: 10px 2px 0; }
-.criterios { margin: 14px 0 0; padding: 12px 14px; background: var(--papel); border-radius: var(--radio); border: 1px solid var(--linea); }
-.criterios ol { margin: 6px 0 0; padding-left: 22px; }
-.criterios li { margin: 2px 0; }
 
 /* mesas */
 .filtro { display: block; margin: 0 0 12px; }
@@ -153,7 +150,7 @@ ul.mesas { list-style: none; margin: 0 0 14px; padding: 0; background: var(--pap
 .pend-lista { font-size: .92rem; color: var(--tinta2); margin: 0 0 14px; padding-left: 20px; }
 .grupo-tit { font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; color: var(--tinta2); margin: 18px 0 8px; font-weight: 700; }
 
-/* normativa */
+/* texto suelto (publicar.html) */
 .texto { background: var(--papel); border: 1px solid var(--linea); border-radius: var(--radio); padding: 4px 16px 14px; margin-bottom: 14px; }
 .texto h2 { font-size: 1.05rem; margin: 14px 0 6px; }
 .texto p, .texto li { margin: 4px 0; }
@@ -200,3 +197,26 @@ footer.pie { background: var(--barra); color: var(--barra-suave); font-size: .88
 .acciones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
 .registro { white-space: pre-wrap; font: .85rem/1.4 ui-monospace, Consolas, monospace; background: var(--fondo); padding: 10px; border-radius: 8px; margin: 10px 0 0; }
 [hidden] { display: none !important; }
+
+/* fechas de juego, parejas y folleto */
+.plazo { margin: 0 0 12px; font-weight: 700; }
+.lista-parejas { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.lista-parejas th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--tinta2); padding: 8px 10px; border-bottom: 2px solid var(--tinta); }
+.lista-parejas td { padding: 9px 10px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+.lista-parejas tr:last-child td { border-bottom: 0; }
+.lista-parejas .n { font-weight: 800; width: 2.5em; }
+.lista-parejas .nom { display: block; }
+.lista-parejas .zona { color: var(--tinta2); white-space: nowrap; }
+.lista-parejas tr.ret .nom { color: var(--tinta2); text-decoration: line-through; text-decoration-thickness: 1px; }
+.calendario h2, .folleto h2 { font-size: 1.05rem; margin: 0 0 8px; }
+.calendario ol { list-style: none; margin: 0 0 20px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.calendario li { display: grid; grid-template-rows: auto auto; background: var(--papel); border: 1.5px solid var(--tinta); border-radius: 8px; overflow: hidden; }
+.calendario .num { display: flex; align-items: baseline; gap: 6px; padding: 6px 10px; font-size: 1.3rem; font-weight: 800; line-height: 1.1; border-bottom: 1.5px solid var(--tinta); }
+.calendario .num small { font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: var(--tinta2); }
+.calendario .b { margin-left: auto; font-size: .8rem; border: 1.5px solid currentColor; border-radius: 5px; padding: 0 5px; }
+.calendario .fechas { padding: 6px 10px; font-size: .92rem; font-variant-numeric: tabular-nums; }
+.calendario li.curso { background: var(--marca); color: var(--marca-texto); border-color: var(--marca); }
+.calendario li.curso .num { border-bottom-color: currentColor; }
+.calendario li.curso .num small { color: inherit; }
+.folleto p { margin: 0 0 12px; }
+.visor { width: 100%; height: min(80vh, 900px); min-height: 420px; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--papel); }
