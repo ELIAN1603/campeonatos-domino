@@ -9,11 +9,11 @@ Este repositorio es público. **Nunca entra un Excel, un teléfono ni una licenc
 | Ruta | Para qué |
 |---|---|
 | `index.html` | Portada: campeonatos en juego y terminados, y buscador de jugador |
-| `torneo.html?t=<id>` | Un campeonato: Clasificación, Emparejamientos, Resultados y Normativa |
+| `torneo.html?t=<id>` | Un campeonato: Clasificación, Mesas, Resultados, Parejas y Folleto |
 | `publicar.html` | Para la mesa de control: lee la hoja WEB del Excel, valida y escribe los JSON |
 | `assets/` | Estilo, código de la web, código del contrato de datos y SheetJS (copia local, sin CDN) |
 | `datos/indice.json` | Lista de campeonatos que ve la portada. Lo escribe `publicar.html` |
-| `datos/<id>/` | `jornada_NN.json` (una foto por jornada) y `actual.json` |
+| `datos/<id>/` | `jornada_NN.json` (una foto por jornada), `actual.json` y, si lo hay, `folleto.pdf` |
 | `datos/_prueba/` | Datos inventados para probar. No salen en `indice.json` |
 | `pruebas/` | Pruebas automáticas |
 
@@ -22,6 +22,9 @@ El formato de los JSON y de la hoja WEB está en `docs/W2_contrato_datos.md` del
 ## Cómo decide la web qué enseña
 
 - La clasificación va en vivo, como en el Excel: en cuanto la jornada en curso tiene un resultado, se ve esa jornada, reordenada, con ⏳ en quien aún no ha jugado (`pendiente` del JSON; lleva sus cifras de antes). Mientras no haya ningún resultado, se ve la última jornada cerrada.
+- Bajo el selector de jornada, en Clasificación y en Mesas, sale «Jornada N · se juega del dd/mm al dd/mm» con `plazo_desde` y `plazo_hasta`; si están vacíos no sale nada.
+- La pestaña Folleto enseña el calendario (clave opcional `calendario` de `actual.json`, con la jornada en curso resaltada) y el PDF `datos/<id>/folleto.pdf`, con descarga y vista integrada si el navegador la admite. El folleto se sube a mano y nunca lleva teléfonos ni cuentas bancarias. Detalle en `docs/W2_contrato_datos.md`, sección 12.
+- La web no enseña criterios de clasificación; la leyenda de columnas sí.
 - Cada jornada conserva los nombres que tenía cuando se publicó, así que una sustitución no reescribe las anteriores.
 - Mientras un campeonato está en juego, la página pide `actual.json` cada 60 segundos y se detiene si la pestaña está oculta.
 - Todo texto de los JSON se pinta como texto, nunca como HTML.
@@ -48,7 +51,7 @@ node pruebas/probar_web.cjs
 
 - `probar_contrato.cjs` crea un `.xlsx` pequeño con la hoja WEB (con `hacer_xlsx.py`), lo lee con SheetJS y comprueba que sale el mismo JSON que los ejemplos, y que cada validación V01 a V18 salta cuando toca. El `.xlsx` queda en la carpeta temporal y se borra.
 - `probar_publicar.cjs` abre `publicar.html` en Chromium con una API de GitHub simulada y publica de verdad contra ella.
-- `probar_web.cjs` recorre la web a 390 px y a 1280 px: buscador, jornadas, grupos, filtro, estados raros y que nada desborde.
+- `probar_web.cjs` recorre la web a 390 px y a 1280 px: buscador, pestañas, jornadas, grupos, filtro, fechas de juego, calendario, folleto, estados raros y que nada desborde.
 - `probar_excel_real.cjs` necesita un Excel real; ver la sección siguiente.
 
 ## Prueba con el Excel real del SP
