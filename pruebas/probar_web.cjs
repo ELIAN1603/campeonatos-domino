@@ -53,7 +53,7 @@ const D = 'd=datos/_prueba';
     assert(!/en este grupo/.test(nota), nota);
     assert.strictEqual(await pg.locator('.plazo').innerText(), 'Jornada 3 · se juega del 10/11 al 23/11');
     assert(!/Cómo se ordena|criterio|desempate/i.test(await pg.locator('main').innerText()));
-    assert.deepStrictEqual(await pg.locator('nav.pestanas a').allInnerTexts(), ['Clasificación', 'Mesas', 'Parejas', 'Calendario']);
+    assert.deepStrictEqual(await pg.locator('nav.pestanas a').allInnerTexts(), ['Clasificación', 'Mesas y resultados', 'Parejas', 'Calendario']);
     bien('clasificación: nota sin recuento, fechas de juego, sin criterios y cuatro pestañas en orden');
     const pendJ3 = JSON.parse(fs.readFileSync('datos/_prueba/sp-ejemplo/actual.json', 'utf8')).clasificacion.filter((r) => r.grupo === 'A' && r.pendiente).length;
     assert.strictEqual(await pg.locator('table.clasi .etq.pend').count(), pendJ3); // ⏳ = pendiente del JSON
@@ -130,7 +130,7 @@ const D = 'd=datos/_prueba';
     for (const viejo of ['resultados', 'emparejamientos']) {
       await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=${viejo}&${D}`);
       await pg.waitForSelector('li.mesa');
-      assert.strictEqual(await pg.locator('nav.pestanas a[aria-current=page]').innerText(), 'Mesas');
+      assert.strictEqual(await pg.locator('nav.pestanas a[aria-current=page]').innerText(), 'Mesas y resultados');
     }
     bien('los enlaces antiguos ver=resultados y ver=emparejamientos abren Mesas');
     // parejas: nº, nombres, zona; nunca teléfonos
