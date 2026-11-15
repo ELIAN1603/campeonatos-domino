@@ -24,12 +24,24 @@ let ok = 0; const bien = (t) => { ok++; console.log('  ok  ' + t); };
     assert(!/(src|href)="(?!https:\/\/)[a-z][a-z0-9+.-]*:(?!image)/i.test(h.replace(/href="data:image[^"]*"/g, '')), f + ': enlace con esquema raro');
   }
   bien('las 3 páginas: CSP exacta, referrer, robots noindex/nofollow, sin estilos/scripts/on* en línea ni frame-ancestors');
-  for (const f of ['assets/web.js', 'assets/publicar.js', 'assets/contrato.js']) {
+  for (const f of ['assets/web.js', 'assets/publicar.js', 'assets/contrato.js', 'assets/mesa.js']) {
     const s = fs.readFileSync(path.join(raiz, f), 'utf8');
     assert(!/innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function/.test(s), f + ': HTML o código dinámico');
     assert(!/setAttribute\(\s*['"]style|style:\s*['"]/.test(s), f + ': estilo en línea desde JS');
   }
   bien('JS: sin innerHTML, document.write, eval ni estilos en línea');
+  // el token y la API de GitHub viven en un solo archivo
+  for (const f of fs.readdirSync(path.join(raiz, 'assets')).filter((x) => x.endsWith('.js') && !x.startsWith('xlsx'))) {
+    const s = fs.readFileSync(path.join(raiz, 'assets', f), 'utf8');
+    if (f !== 'mesa.js') {
+      assert(!/Authorization|api\.github\.com|localStorage|tumesa\.token/.test(s), f + ': toca el token o la API de GitHub fuera de mesa.js');
+      if (f !== 'web.js') assert(!/\bfetch\(/.test(s), f + ': usa fetch');
+    }
+  }
+  const mesa = fs.readFileSync(path.join(raiz, 'assets/mesa.js'), 'utf8');
+  assert.strictEqual((mesa.match(/https:\/\/api\.github\.com/g) || []).length, 1);
+  assert.strictEqual((mesa.match(/\bfetch\(/g) || []).length, 1);
+  bien('JS: el token y https://api.github.com solo aparecen en mesa.js, que tiene un único fetch');
   assert.strictEqual(fs.readFileSync(path.join(raiz, 'robots.txt'), 'utf8'), 'User-agent: *\nDisallow: /\n');
   bien('robots.txt: Disallow: /');
 
@@ -40,7 +52,7 @@ let ok = 0; const bien = (t) => { ok++; console.log('  ok  ' + t); };
   assert.strictEqual(robots.status(), 200);
   assert(/Disallow: \//.test(await robots.text()));
   bien('robots.txt se sirve');
-  const casos = [['index.html', '#lista li'], ['torneo.html?t=sp-2026-27', '#cab h1, #cab h2'], ['index.html?d=datos/_prueba', '#lista li'], ['torneo.html?t=sp-ejemplo&d=datos/_prueba', '#cab h1, #cab h2'], ['publicar.html', '#token-estado p']];
+  const casos = [['index.html', '#lista li'], ['torneo.html?t=sp-2026-27', '#cab h1, #cab h2'], ['index.html?d=datos/_prueba', '#lista li'], ['torneo.html?t=sp-ejemplo&d=datos/_prueba', '#cab h1, #cab h2'], ['publicar.html', '#token-estado p'], ['torneo.html?t=sp-2026-27&borrador=1', '#contenido .aviso']];
   for (const [url, esperado] of casos) {
     const pg = await ctx.newPage();
     const malos = []; const externas = [];

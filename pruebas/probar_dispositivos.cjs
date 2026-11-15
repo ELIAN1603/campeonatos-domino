@@ -3,6 +3,7 @@
 const fs = require('fs'), os = require('os'), path = require('path');
 const { execFileSync } = require('child_process');
 const { chromium } = require('playwright');
+const { instalar, sembrar, TOKEN } = require('./api_simulada.cjs');
 const base = process.argv[2] || 'http://localhost:8765';
 const capt = process.argv[3];
 const raiz = path.join(__dirname, '..');
@@ -75,10 +76,6 @@ function llegaATC() {
   for (const [w, h] of TAMANOS) {
     const ctx = await b.newContext({ viewport: { width: w, height: h } });
     const pg = await ctx.newPage();
-    await pg.route('https://api.github.com/**', (r) => {
-      if (/\/contents\//.test(r.request().url())) return r.fulfill({ status: 404, body: '{"message":"Not Found"}' });
-      return r.fulfill({ status: 200, contentType: 'application/json', body: '{"permissions":{"push":true}}' });
-    });
     const mira = async (donde, extra) => {
       n++;
       const f = [...await pg.evaluate(revisar), ...(extra ? await pg.evaluate(extra) : [])];
@@ -107,13 +104,41 @@ function llegaATC() {
       }
     }
 
+    // mesa de control: listas de la web y de borradores (con nombres largos), cada panel de acción, el Excel con destino, un fallo a mitad y un borrador
+    const api = await instalar(ctx);
+    api.poner('web', 'datos/indice.json', JSON.stringify({ version: '1.0', publicado: '2026-01-01T00:00:00Z', torneos: [] }));
+    sembrar(api, 'web', 'sp-ejemplo'); sembrar(api, 'web', 'nombres-largos');
+    sembrar(api, 'borr', 'parejas-ejemplo-2026-11-14'); sembrar(api, 'borr', 'individual-ejemplo-2026-11-14');
     await pg.goto(`${base}/publicar.html`);
-    await mira('publicar · inicio');
-    await pg.fill('#token', 'ghp_TOKEN_DE_PRUEBA'); await pg.click('text=Guardar y comprobar'); await pg.waitForSelector('text=Hay un token guardado');
+    await pg.waitForSelector('#lista-web');
+    await mira('mesa · sin token');
+    await pg.fill('#token', TOKEN); await pg.click('text=Guardar y comprobar'); await pg.waitForSelector('text=Hay un token guardado');
+    await pg.waitForSelector('#lista-web[data-listo]'); await pg.waitForSelector('#lista-borr[data-listo]');
+    await mira('mesa · listas');
+    const abre = async (lista, id, accion, espera) => { await pg.locator(`#lista-${lista} li.torneo[data-id="${id}"] .acciones button:text-is("${accion}")`).click(); await pg.waitForSelector(`#lista-${lista} li.torneo[data-id="${id}"] ${espera}`); };
+    await abre('web', 'nombres-largos', 'Editar', '#ed-nombre'); await mira('mesa · editar');
+    await pg.fill('#ed-nombre', 'ab'); await pg.click('#lista-web .panel button:text-is("Guardar cambios")'); await mira('mesa · editar con error');
+    await abre('web', 'nombres-largos', 'Ocultar', '.aviso-accion'); await mira('mesa · confirmar ocultar');
+    await abre('web', 'nombres-largos', 'Eliminar', '.panel input'); await mira('mesa · eliminar (escribir el id)');
+    await abre('borr', 'individual-ejemplo-2026-11-14', 'Publicar', '.aviso-accion'); await mira('mesa · confirmar publicar borrador');
+    api.fallar = (m, clave, ruta) => (m === 'PUT' && clave === 'web' && ruta === 'datos/indice.json' ? 500 : null);
+    await pg.click('#lista-borr .panel button:text-is("Sí, publicar en la web")');
+    await pg.waitForSelector('#reintento-mesa button'); await mira('mesa · registro con fallo y Reintentar');
+    api.fallar = null;
     await pg.setInputFiles('#archivo', excel);
     await pg.waitForSelector('#paso-revision:not([hidden]) .resumen');
     await pg.click('#revision summary');
-    await mira('publicar · revisión');
+    await mira('publicar · revisión con destino');
+    await pg.click('input[name=destino][value=web]'); await pg.waitForFunction(() => document.querySelector('#publicar').textContent === 'Publicar en la web');
+    await mira('publicar · destino web');
+    // borrador visto por torneo.html: con token, sin token y con token de otro
+    await pg.goto(`${base}/torneo.html?t=parejas-ejemplo-2026-11-14&borrador=1`); await pg.waitForSelector('table.clasi');
+    await mira('borrador · clasificación');
+    await pg.goto(`${base}/torneo.html?t=parejas-ejemplo-2026-11-14&borrador=1&ver=mesas`); await pg.waitForSelector('.mesa');
+    await mira('borrador · mesas');
+    await pg.evaluate(() => localStorage.removeItem('tumesa.token'));
+    await pg.goto(`${base}/torneo.html?t=parejas-ejemplo-2026-11-14&borrador=1`); await pg.waitForSelector('#contenido .aviso');
+    await mira('borrador · privado');
     await ctx.close();
   }
   await b.close();

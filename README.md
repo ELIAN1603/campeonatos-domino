@@ -1,6 +1,6 @@
 # campeonatos-domino
 
-Web de resultados de los campeonatos de dominó que lleva la mesa de control (Jesús Eduardo Elián C.). Sitio estático para GitHub Pages, sin servidor.
+Web de resultados de los campeonatos de dominó que lleva la mesa de control (Jesús Eduardo Elián C.). Sitio estático para GitHub Pages, sin servidor. Los borradores, antes de publicarse, viven en el repositorio privado `ELIAN1603/campeonatos-borradores`, que tiene la misma estructura `datos/`.
 
 Este repositorio es público. **Nunca entra un Excel, un teléfono ni una licencia.** El `.gitignore` deja fuera `*.xlsx`, `*.xlsm` y `*.xls`.
 
@@ -9,12 +9,13 @@ Este repositorio es público. **Nunca entra un Excel, un teléfono ni una licenc
 | Ruta | Para qué |
 |---|---|
 | `index.html` | Portada: campeonatos en juego y terminados, y buscador de jugador |
-| `torneo.html?t=<id>` | Un campeonato: Clasificación, Mesas, Parejas y Folleto |
-| `publicar.html` | Para la mesa de control: lee la hoja WEB del Excel, valida y escribe los JSON |
+| `torneo.html?t=<id>` | Un campeonato: Clasificación, Mesas, Parejas y Calendario |
+| `torneo.html?t=<id>&borrador=1` | Un borrador de `campeonatos-borradores`. Solo se ve con el token guardado en ese navegador; sin él, dice que es privado |
+| `publicar.html` | La mesa de control: lista los campeonatos de la web y los borradores, sube un Excel (lee la hoja WEB, valida y escribe los JSON), publica, oculta, edita y elimina |
 | `SECURITY.md` | Qué datos se publican, cómo, y qué hacer con el token |
 | `robots.txt` | `Disallow: /` |
-| `assets/` | Estilo, código de la web, código del contrato de datos y SheetJS (copia local, sin CDN) |
-| `datos/indice.json` | Lista de campeonatos que ve la portada. Lo escribe `publicar.html` |
+| `assets/` | Estilo, código de la web, contrato de datos, `mesa.js` (el único código que usa el token y la API de GitHub) y SheetJS (copia local, sin CDN) |
+| `datos/indice.json` | Lista de campeonatos que ve la portada, en el orden en que se enseñan dentro de cada estado. Lo escribe `publicar.html` |
 | `datos/<id>/` | `jornada_NN.json` (una foto por jornada), `actual.json` y, si lo hay, `folleto.pdf` |
 | `datos/_prueba/` | Datos inventados para probar. No salen en `indice.json`. `sp-calendario` es un SP con calendario y grupo B firme desde la jornada 12; `nombres-largos` lleva nombres, zonas y título muy largos |
 | `pruebas/` | Pruebas automáticas |
@@ -32,6 +33,19 @@ El formato de los JSON y de la hoja WEB está en `docs/W2_contrato_datos.md` del
 - Cada jornada conserva los nombres que tenía cuando se publicó, así que una sustitución no reescribe las anteriores.
 - Mientras un campeonato está en juego, la página pide `actual.json` cada 60 segundos y se detiene si la pestaña está oculta.
 - Todo texto de los JSON se pinta como texto, nunca como HTML.
+
+## La mesa de control
+
+`publicar.html` (la misma dirección de siempre) trabaja con el token guardado en el navegador. Si el token no tiene acceso a `campeonatos-borradores`, la lista de borradores dice que falta «Repository access» y el resto sigue funcionando.
+
+1. Lista de campeonatos en dos grupos, «En la web» (de `datos/indice.json` de este repositorio) y «Borradores» (de `datos/indice.json` de `campeonatos-borradores`). Cada uno enseña nombre, tipo, jornada publicada, fecha de la última publicación y sus acciones.
+2. Subir un Excel: se lee la hoja WEB con las validaciones V01 a V19 y la vista previa de siempre, y se elige el destino, Borrador o Web. Por defecto es Web si el torneo ya está en la web y Borrador si es nuevo.
+3. Ver un borrador: `torneo.html?t=<id>&borrador=1`. Lee de `campeonatos-borradores` con la API de GitHub y el token de ese navegador. Sin token, o si algo falla, solo dice que es privado.
+4. Publicar un borrador copia sus archivos a este repositorio y lo añade a `indice.json`; el borrador se queda donde estaba. Ocultar lo copia a borradores, borra sus archivos de este repositorio y lo quita de `indice.json`. Lo que ya se publicó queda en el historial público de git. Eliminar borra un borrador o un campeonato de la web, tras escribir su id.
+5. Editar nombre, temporada, estado (en juego, próximo, terminado) y puesto en la portada, en `indice.json` y `actual.json`. La siguiente publicación desde el Excel sobrescribe nombre, temporada y estado con lo que diga la hoja INICIO; el puesto en la portada se conserva.
+6. Las escrituras de varios archivos van en orden seguro: primero los datos y al final el índice (al ocultar, el índice de la web se actualiza antes de borrar sus archivos), para que la portada pública nunca apunte a archivos que no existen. Si algo falla a medias, la página dice qué quedó hecho y ofrece «Reintentar».
+
+Qué puede escribir y cómo se protege el token está en `SECURITY.md`. Cómo se usa, paso a paso, está en la sección 14 de `entregables/sp/Guia_SP_sin_macros.md` de `programas-domino`.
 
 ## Ver los datos de prueba
 
@@ -55,11 +69,11 @@ node pruebas/probar_seguridad.cjs
 node pruebas/probar_dispositivos.cjs
 ```
 
-- `probar_contrato.cjs` crea un `.xlsx` pequeño con la hoja WEB (con `hacer_xlsx.py`), lo lee con SheetJS y comprueba que sale el mismo JSON que los ejemplos, y que cada validación V01 a V19 salta cuando toca. El `.xlsx` queda en la carpeta temporal y se borra.
-- `probar_publicar.cjs` abre `publicar.html` en Chromium con una API de GitHub simulada y publica de verdad contra ella.
+- `probar_contrato.cjs` prueba también las operaciones del índice (quitar, añadir, editar y orden). Crea un `.xlsx` pequeño con la hoja WEB (con `hacer_xlsx.py`), lo lee con SheetJS y comprueba que sale el mismo JSON que los ejemplos, y que cada validación V01 a V19 salta cuando toca. El `.xlsx` queda en la carpeta temporal y se borra.
+- `probar_publicar.cjs` abre `publicar.html` y `torneo.html?borrador=1` en Chromium con una API de GitHub simulada para los dos repositorios (`pruebas/api_simulada.cjs`) y prueba la lista, subir a borrador y a la web, ver un borrador con y sin token, publicar, ocultar, editar, eliminar, un fallo a mitad con «Reintentar», un token sin acceso a borradores, las rutas y los repositorios prohibidos y el 401. La API simulada comprueba tras cada escritura que la web pública no apunta a archivos que faltan.
 - `probar_web.cjs` recorre la web a 390 px y a 1280 px: buscador, pestañas, jornadas, grupos, filtro, fechas de juego, calendario, estados raros y que nada desborde. Con una carpeta como segundo argumento guarda capturas.
-- `probar_dispositivos.cjs` abre portada, torneo (las cuatro pestañas, con el 24º real y con `datos/_prueba/nombres-largos`) y `publicar.html` con un Excel de prueba en 320×640, 360×780, 390×844, 412×915, 667×375, 768×1024 y 1280×800. Falla si la página se desplaza en horizontal, si un dato queda con `display:none` o `visibility:hidden` fuera de un `[hidden]`, si algo con `overflow` hidden o clip recorta contenido, si un texto se sale de su caja o de la ventana, o si en Clasificación no se llega con el desplazamiento hasta TC. Con una carpeta como segundo argumento guarda capturas de la clasificación del 24º a 360 y 390 px.
-- `probar_seguridad.cjs` comprueba la CSP y las demás etiquetas `<meta>` de las tres páginas, `robots.txt`, que las páginas cargan sin violaciones en consola y que los enlaces externos solo valen con https. `probar_publicar.cjs` comprueba además autor y committer de cada PUT, el rechazo de rutas fuera de `datos/` y el borrado del token ante un 401.
+- `probar_dispositivos.cjs` abre portada, torneo (las cuatro pestañas, con el 24º real y con `datos/_prueba/nombres-largos`), un borrador y la mesa de control (listas, cada panel de confirmar, editar y eliminar, un fallo con «Reintentar» y un Excel de prueba) en 320×640, 360×780, 390×844, 412×915, 667×375, 768×1024 y 1280×800. Falla si la página se desplaza en horizontal, si un dato queda con `display:none` o `visibility:hidden` fuera de un `[hidden]`, si algo con `overflow` hidden o clip recorta contenido, si un texto se sale de su caja o de la ventana, o si en Clasificación no se llega con el desplazamiento hasta TC. Con una carpeta como segundo argumento guarda capturas de la clasificación del 24º a 360 y 390 px.
+- `probar_seguridad.cjs` comprueba la CSP y las demás etiquetas `<meta>` de las tres páginas, `robots.txt`, que las páginas cargan sin violaciones en consola y que los enlaces externos solo valen con https. `probar_seguridad.cjs` comprueba además que el token y la dirección de la API solo aparecen en `assets/mesa.js`. `probar_publicar.cjs` comprueba autor y committer de cada escritura, mensajes de commit sin datos personales, el rechazo de rutas fuera de `datos/` y de otros repositorios, y el borrado del token ante un 401.
 - `probar_excel_real.cjs` necesita un Excel real; ver la sección siguiente.
 
 ## Prueba con Excel reales (los tres tipos)
@@ -79,7 +93,7 @@ Resultado con los entregables de W2b (14/11/2026), sin cambiar `publicar.html` n
 
 ## Lo que falta comprobar
 
-1. La escritura real contra GitHub con el token del padre (hasta ahora, solo contra una API simulada): permisos, errores 401, 403 y 409 y el origen `github.io`.
+1. La escritura real contra GitHub con el token del padre (hasta ahora, solo contra una API simulada), ahora en los dos repositorios: permisos, errores 401, 403 y 409 y el origen `github.io`. Falta también confirmar que GitHub devuelve 404 y no 403 cuando el token no incluye `campeonatos-borradores` (la página trata los dos igual) y probar ocultar y publicar un borrador con datos reales.
 2. El tiempo de lectura en el PC del árbitro (Windows 10, Chrome o Edge). Aquí tarda menos de un segundo, pero la máquina es otra.
 3. Que Pages sirva `datos/` con el retraso esperado y que el refresco de 60 segundos vea las publicaciones.
 4. Un Excel guardado por Excel de verdad. Los de prueba los guarda LibreOffice (y `inject_values.py` pone los valores), así que falta confirmar que Excel 2016 los guarda igual.

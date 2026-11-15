@@ -14,6 +14,7 @@ const fs = require('fs'), path = require('path');
 const XLSX = require('../assets/xlsx.mini.min.js');
 const C = require('../assets/contrato.js');
 const { chromium } = require('playwright');
+const { instalar } = require('./api_simulada.cjs');
 
 const ficticio = process.argv.includes('--ficticio');   // casos de prueba con nombres como Nom1a: V06 bloquea a propósito
 const [xlsx, jsonPy, base = 'http://localhost:8765'] = process.argv.slice(2).filter((x) => !x.startsWith('--'));
@@ -58,38 +59,30 @@ console.log(`${path.basename(xlsx)} (${MB} MB), jornada ${esperado.jornada.numer
   if (ficticio) { console.log(`\n${ok} comprobaciones bien`); return; }
 
   // ---- 2) navegador
-  const repo = new Map(); const puts = [];
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 1000, height: 900 } });
   await ctx.addInitScript(() => localStorage.setItem('tumesa.token', 'ghp_TOKEN_DE_PRUEBA'));
+  const api = await instalar(ctx);
   const pg = await ctx.newPage();
   const errores = []; pg.on('pageerror', (e) => errores.push(e.message));
-  await pg.route('https://api.github.com/**', async (route) => {
-    const req = route.request(); const u = new URL(req.url());
-    const m = /\/repos\/ELIAN1603\/campeonatos-domino\/contents\/(.+)$/.exec(u.pathname);
-    if (!m) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ permissions: { push: true } }) });
-    const ruta = decodeURIComponent(m[1]);
-    if (req.method() === 'GET') return route.fulfill({ status: 404, body: '{"message":"Not Found"}' });
-    const c = JSON.parse(req.postData());
-    repo.set(ruta, Buffer.from(c.content, 'base64').toString('utf8')); puts.push(ruta);
-    return route.fulfill({ status: 201, contentType: 'application/json', body: '{"content":{},"commit":{}}' });
-  });
   await pg.goto(base + '/publicar.html');
   t0 = process.hrtime.bigint();
   await pg.setInputFiles('#archivo', xlsx);
   await pg.waitForSelector('.tabla-caja', { timeout: 120000 });
   const msNav = Number(process.hrtime.bigint() - t0) / 1e6;
+  await pg.click('input[name=destino][value=web]'); // un torneo nuevo se propone como borrador; aquí se publica en la web
+  await pg.waitForFunction(() => document.querySelector('#publicar').textContent === 'Publicar en la web');
   assert.strictEqual(await pg.isDisabled('#publicar'), false);
   bien(`publicar.html lee y valida el Excel de ${MB} MB en ${(msNav / 1000).toFixed(2)} s (Chromium, esta máquina) y deja publicar`);
   const vals = await pg.$$eval('.vals > li.bloquea, .vals > li.confirma, .vals > li.avisa', (l) => l.map((x) => x.className + ': ' + x.textContent.slice(0, 80)));
   if (vals.length) console.log('     avisos en pantalla: ' + vals.join(' // '));
   await pg.click('#publicar'); await pg.waitForSelector('text=Publicado.', { timeout: 60000 });
   const id = esperado.torneo.id, nn = String(esperado.jornada.numero).padStart(2, '0');
-  assert.deepStrictEqual(puts, [`datos/${id}/jornada_${nn}.json`, `datos/${id}/actual.json`, 'datos/indice.json']);
+  assert.deepStrictEqual(api.puts.map((p) => p.clave + ' ' + p.ruta), [`web datos/${id}/jornada_${nn}.json`, `web datos/${id}/actual.json`, 'web datos/indice.json']);
   const sinPub = (t) => t.replace(/"publicado": "[^"]*"/g, '"publicado": "X"');
-  assert.strictEqual(sinPub(repo.get(`datos/${id}/jornada_${nn}.json`)), sinPub(textoPy));
+  assert.strictEqual(sinPub(api.repos.web.get(`datos/${id}/jornada_${nn}.json`).texto), sinPub(textoPy));
   bien('jornada_NN.json escrito por publicar.html: idéntico, byte a byte, al de web_export.py (salvo `publicado`)');
-  const act = JSON.parse(repo.get(`datos/${id}/actual.json`));
+  const act = api.json('web', `datos/${id}/actual.json`);
   assert.deepStrictEqual(quitar(act), quitar(esperado));
   assert.deepStrictEqual(act.jornadas.map((x) => x.numero), [esperado.jornada.numero]);
   bien('actual.json e indice.json coherentes');

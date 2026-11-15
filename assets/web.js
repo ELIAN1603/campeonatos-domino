@@ -54,17 +54,25 @@
   const qs = new URLSearchParams(location.search);
   let BASE = 'datos';
   const d = qs.get('d');
-  if (d && /^datos(\/[a-z0-9_-]+)+$/.test(d)) BASE = d;
+  // torneo.html?t=<id>&borrador=1 lee de campeonatos-borradores por la API de GitHub, con el token de este navegador (assets/mesa.js).
+  const BORRADOR = qs.get('borrador') === '1' && document.body.dataset.pagina === 'torneo';
+  if (d && !BORRADOR && /^datos(\/[a-z0-9_-]+)+$/.test(d)) BASE = d;
   const ES_PRUEBA = BASE !== 'datos';
 
   function url(pagina, params) {
     const p = new URLSearchParams();
     for (const [k, v] of Object.entries(params || {})) if (v != null && v !== '') p.set(k, v);
     if (ES_PRUEBA) p.set('d', BASE);
+    if (BORRADOR && pagina === 'torneo.html') p.set('borrador', '1');
     const s = p.toString();
     return pagina + (s ? '?' + s : '');
   }
   async function leer(ruta, fresco) {
+    if (BORRADOR) {
+      const f = await window.Mesa.leer('borr', ruta.split('?')[0]);
+      if (!f) throw new Error(ruta + ' 404');
+      return f.json;
+    }
     const r = await fetch(ruta, fresco ? { cache: 'no-cache' } : undefined);
     if (!r.ok) throw new Error(ruta + ' ' + r.status);
     return r.json();
@@ -499,20 +507,27 @@
     } catch (e) { /* sin red: se reintenta en el siguiente minuto */ }
   }
 
+  // Sin token, o si algo falla, un borrador dice solo que es privado: ni el nombre ni el motivo.
+  const borradorPrivado = () => $('#contenido').replaceChildren(el('p', { class: 'aviso alerta' }, 'Este campeonato es un borrador privado. Solo se ve con el token de la mesa de control guardado en este navegador, y con acceso a campeonatos-borradores. '), el('a', { href: 'publicar.html' }, 'Ir a la mesa de control'));
+
   async function torneo() {
     leerUrl();
     if (!E.id || !/^[a-z0-9][a-z0-9-]{2,59}$/.test(E.id)) { $('#contenido').replaceChildren(el('p', { class: 'aviso alerta' }, 'Falta el campeonato. Vuelve a la portada y elige uno.')); return; }
+    if (BORRADOR) {
+      document.body.prepend(el('div', { class: 'banda-prueba' }, 'Borrador privado: solo lo ves tú, con el token de este navegador. La web pública no lo enseña.'));
+      if (!window.Mesa || !window.Mesa.token.obtener()) { borradorPrivado(); return; }
+    }
     try { E.actual = await leer(`${BASE}/${E.id}/actual.json`, true); }
-    catch (e) { $('#contenido').replaceChildren(el('p', { class: 'aviso alerta' }, 'No se ha encontrado este campeonato. Puede que todavía no esté publicado.')); return; }
+    catch (e) { if (BORRADOR) borradorPrivado(); else $('#contenido').replaceChildren(el('p', { class: 'aviso alerta' }, 'No se ha encontrado este campeonato. Puede que todavía no esté publicado.')); return; }
     await pintar();
     window.addEventListener('popstate', () => { leerUrl(); pintar(); });
-    if (E.actual.torneo.estado === 'en_juego') {
+    if (E.actual.torneo.estado === 'en_juego' && !BORRADOR) {
       setInterval(() => { if (!document.hidden) sondear(); }, 60000);
       document.addEventListener('visibilitychange', () => { if (!document.hidden) sondear(); });
     }
   }
 
-  window.TuMesa = { el, poner };
+  window.TuMesa = { el, poner, instante, TIPOS, ESTADOS };
 
   document.addEventListener('DOMContentLoaded', () => {
     bandaPrueba();

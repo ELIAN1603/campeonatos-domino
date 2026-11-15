@@ -6,44 +6,63 @@
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Publicar · tu mesa</title>
+<title>Mesa de control · tu mesa</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2018%2032%27%3E%3Crect%20x=%271%27%20y=%271%27%20width=%2716%27%20height=%2730%27%20rx=%274%27%20fill=%27%230c3a38%27/%3E%3Cpath%20d=%27M1%2016h16%27%20stroke=%27%23fff%27%20stroke-width=%271.6%27/%3E%3Ccircle%20cx=%279%27%20cy=%278.5%27%20r=%271.7%27%20fill=%27%23fff%27/%3E%3Ccircle%20cx=%275.3%27%20cy=%2719.5%27%20r=%271.7%27%20fill=%27%23fff%27/%3E%3Ccircle%20cx=%2712.7%27%20cy=%2719.5%27%20r=%271.7%27%20fill=%27%23fff%27/%3E%3Ccircle%20cx=%279%27%20cy=%2723.5%27%20r=%271.7%27%20fill=%27%23fff%27/%3E%3Ccircle%20cx=%275.3%27%20cy=%2727.5%27%20r=%271.7%27%20fill=%27%23fff%27/%3E%3Ccircle%20cx=%2712.7%27%20cy=%2727.5%27%20r=%271.7%27%20fill=%27%23fff%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="assets/estilo.css?v=20261115g">
-<script src="assets/xlsx.mini.min.js?v=20261115g" defer></script>
-<script src="assets/contrato.js?v=20261115g" defer></script>
-<script src="assets/web.js?v=20261115g" defer></script>
-<script src="assets/publicar.js?v=20261115g" defer></script>
+<link rel="stylesheet" href="assets/estilo.css?v=20261115h">
+<script src="assets/xlsx.mini.min.js?v=20261115h" defer></script>
+<script src="assets/contrato.js?v=20261115h" defer></script>
+<script src="assets/mesa.js?v=20261115h" defer></script>
+<script src="assets/web.js?v=20261115h" defer></script>
+<script src="assets/publicar.js?v=20261115h" defer></script>
 </head>
 <body data-pagina="publicar">
 <header class="barra"><div class="barra-in">
-  <a class="marca" href="./"><span class="ficha-icono" aria-hidden="true"></span>tu mesa <small>publicar</small></a>
+  <a class="marca" href="./"><span class="ficha-icono" aria-hidden="true"></span>tu mesa <small>mesa de control</small></a>
   <a class="volver" href="./">Ver la web</a>
 </div></header>
 <main>
-  <h1 class="tit-publicar">Publicar resultados</h1>
-  <p class="nota">Elige el Excel del campeonato. Esta página lee solo la hoja WEB y lo hace en tu ordenador: el Excel no se sube a ningún sitio. Guarda el Excel antes de elegirlo.</p>
+  <h1 class="tit-publicar">Mesa de control</h1>
+  <p class="nota">Aquí se gestionan los campeonatos: subir un Excel como borrador o directamente a la web, ver los borradores, publicarlos, ocultarlos, editar sus datos y eliminarlos. Esta página lee solo la hoja WEB del Excel y lo hace en tu ordenador: el Excel no se sube a ningún sitio. Guarda el Excel antes de elegirlo.</p>
 
   <section class="paso" id="paso-token" aria-labelledby="t-token">
     <h2 id="t-token">1. Conexión con GitHub</h2>
     <div id="token-estado"></div>
   </section>
 
+  <section class="paso" id="paso-torneos" aria-labelledby="t-torneos">
+    <h2 id="t-torneos">2. Campeonatos</h2>
+    <div class="acciones sin-margen"><button class="boton sec" id="actualizar" type="button">Actualizar la lista</button></div>
+    <div id="estado-mesa" class="nota sep-10" aria-live="polite"></div>
+    <h3 class="subtitulo">En la web</h3>
+    <p class="nota sin-margen">Lo que ve todo el mundo en la portada.</p>
+    <div id="lista-web"></div>
+    <div id="restos" hidden></div>
+    <h3 class="subtitulo">Borradores</h3>
+    <p class="nota sin-margen">Privados: solo se ven con el token, en este navegador.</p>
+    <div id="lista-borr"></div>
+    <pre class="registro" id="registro-mesa" hidden></pre>
+    <div class="acciones" id="reintento-mesa" hidden></div>
+  </section>
+
   <section class="paso" id="paso-excel" aria-labelledby="t-excel">
-    <h2 id="t-excel">2. El Excel</h2>
+    <h2 id="t-excel">3. Subir un Excel</h2>
     <label for="archivo" class="solo-lector">Archivo Excel del campeonato</label>
     <input id="archivo" type="file" accept=".xlsx,.xlsm">
     <div id="lectura" aria-live="polite"></div>
   </section>
 
   <section class="paso" id="paso-revision" aria-labelledby="t-rev" hidden>
-    <h2 id="t-rev">3. Revisión</h2>
+    <h2 id="t-rev">4. Destino y revisión</h2>
+    <fieldset class="destino" id="destino"></fieldset>
     <div id="revision"></div>
   </section>
 
   <section class="paso" id="paso-publicar" aria-labelledby="t-pub" hidden>
-    <h2 id="t-pub">4. Publicar</h2>
-    <div class="acciones"><button class="boton" id="publicar" type="button" disabled>Publicar</button><span id="pub-nota" class="nota sin-margen"></span></div>
+    <h2 id="t-pub">5. Guardar</h2>
+    <div class="acciones"><button class="boton" id="publicar" type="button" disabled>Publicar en la web</button><span id="pub-nota" class="nota sin-margen"></span></div>
     <pre class="registro" id="registro" hidden></pre>
+    <div class="acciones" id="reintento" hidden></div>
+    <p class="nota sep-10" id="resultado" hidden></p>
   </section>
 </main>
 <footer class="pie"><div class="pie-in">

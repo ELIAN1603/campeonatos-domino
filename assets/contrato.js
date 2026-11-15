@@ -266,19 +266,47 @@
     l.push({ numero: j.jornada.numero, completa: j.jornada.completa, publicado: j.publicado });
     return l.sort((x, y) => x.numero - y.numero);
   }
+  /* Entradas de indice.json. Todas devuelven un índice nuevo y no tocan el recibido. */
+  const torneosDe = (ind) => ((ind && ind.torneos) || []).slice();
+  const indiceDe = (ts, publicado) => ({ version: '1.0', publicado, torneos: ts });
+  const indiceSin = (ind, id, publicado) => indiceDe(torneosDe(ind).filter((x) => x.id !== id), publicado);
+  // Si la entrada ya estaba, conserva su sitio (la mesa puede haber cambiado el orden de la portada); si es nueva, entra por fecha, la más reciente primero.
+  function indiceCon(ind, e, publicado) {
+    const ts = torneosDe(ind);
+    const i = ts.findIndex((x) => x.id === e.id);
+    if (i >= 0) ts[i] = e;
+    else {
+      const k = ts.findIndex((x) => (x.fecha || '') < (e.fecha || ''));
+      ts.splice(k < 0 ? ts.length : k, 0, e);
+    }
+    return indiceDe(ts, publicado);
+  }
+  // Puesto (desde 1) de un torneo entre los de su mismo estado: es el orden en que la portada los enseña. 0 si no está.
+  function posicionEnGrupo(ind, id) {
+    const ts = torneosDe(ind), e = ts.find((x) => x.id === id);
+    return e ? ts.filter((x) => x.estado === e.estado).findIndex((x) => x.id === id) + 1 : 0;
+  }
+  // Cambia nombre, temporada y estado de una entrada y la coloca en el puesto `orden` de su grupo (la portada agrupa por estado).
+  function indiceEditado(ind, id, c, publicado) {
+    const ts = torneosDe(ind), i = ts.findIndex((x) => x.id === id);
+    if (i < 0) throw new Error('No está en indice.json: ' + id);
+    const e = { ...ts[i], nombre: c.nombre, temporada: c.temporada, estado: c.estado };
+    e.ganador = c.estado === 'terminado' ? (e.ganador || c.ganador || null) : null;
+    ts.splice(i, 1);
+    const mismos = ts.map((x, k) => [x, k]).filter(([x]) => x.estado === c.estado);
+    const pos = Math.min(Math.max(Number.isInteger(c.orden) ? c.orden : 1, 1), mismos.length + 1);
+    ts.splice(pos <= mismos.length ? mismos[pos - 1][1] : mismos.length ? mismos[mismos.length - 1][1] + 1 : ts.length, 0, e);
+    return indiceDe(ts, publicado);
+  }
   function indiceNuevo(ind, j) {
     const t = j.torneo;
     const primero = j.clasificacion.find((x) => x.grupo === 'A' && x.puesto === 1);
     const p = primero && j.participantes.find((x) => x.id === primero.id);
-    const e = { id: t.id, nombre: t.nombre, tipo: t.tipo, temporada: t.temporada, fecha: t.fecha, estado: t.estado, jornada_actual: j.jornada.numero,
-      n_jornadas: t.n_jornadas, n_participantes: t.n_participantes, ganador: t.estado === 'terminado' && p ? { id: p.id, corto: p.corto } : null };
-    const ts = ((ind && ind.torneos) || []).filter((x) => x.id !== t.id);
-    ts.push(e);
-    ts.sort((x, y) => (y.fecha || '').localeCompare(x.fecha || ''));
-    return { version: '1.0', publicado: j.publicado, torneos: ts };
+    return indiceCon(ind, { id: t.id, nombre: t.nombre, tipo: t.tipo, temporada: t.temporada, fecha: t.fecha, estado: t.estado, jornada_actual: j.jornada.numero,
+      n_jornadas: t.n_jornadas, n_participantes: t.n_participantes, ganador: t.estado === 'terminado' && p ? { id: p.id, corto: p.corto } : null }, j.publicado);
   }
   const aTexto = (o) => JSON.stringify(o, null, 1) + '\n';
 
-  const API = { VERSION, CLAVES_META, B, leer, construir, validar, conJornadas, jornadasNuevas, indiceNuevo, aTexto, letra };
+  const API = { VERSION, CLAVES_META, B, leer, construir, validar, conJornadas, jornadasNuevas, indiceNuevo, indiceSin, indiceCon, indiceEditado, posicionEnGrupo, aTexto, letra };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else raiz.Contrato = API;
 })(typeof window !== 'undefined' ? window : globalThis);

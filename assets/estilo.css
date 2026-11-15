@@ -203,6 +203,28 @@ footer.pie { background: var(--barra); color: var(--barra-suave); font-size: .88
 .registro { white-space: pre-wrap; font: .85rem/1.4 ui-monospace, Consolas, monospace; background: var(--fondo); padding: 10px; border-radius: 8px; margin: 10px 0 0; }
 [hidden] { display: none !important; }
 
+/* mesa de control (publicar.html) */
+.subtitulo { margin: 16px 0 2px; font-size: 1rem; }
+.torneos { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.torneo { background: var(--fondo); border: 1px solid var(--linea); border-radius: var(--radio); padding: 10px 12px; min-width: 0; }
+.torneo-nombre { margin: 0 0 3px; font-size: 1.02rem; line-height: 1.25; overflow-wrap: anywhere; }
+.torneo-info { margin: 0; color: var(--tinta2); font-size: .9rem; overflow-wrap: anywhere; }
+.torneo-info code { font-size: .85rem; }
+.torneo .acciones .boton { padding: 8px 14px; }
+.panel { min-width: 0; }
+.panel:not(:empty) { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--tinta2); }
+.aviso-accion { background: var(--aviso-fondo); color: var(--aviso-texto); border-radius: 8px; padding: 10px 12px; margin: 0 0 10px; overflow-wrap: anywhere; }
+.aviso-accion p { margin: 0 0 6px; }
+.aviso-accion p:last-child { margin: 0; }
+.paso textarea { resize: vertical; }
+.campo { margin: 0 0 10px; }
+.campo label { display: block; font-weight: 700; font-size: .9rem; margin-bottom: 3px; }
+.paso select, .paso input[type=number], .paso textarea { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--tinta); background: var(--fondo); }
+.destino { border: 1px solid var(--linea); border-radius: var(--radio); margin: 0 0 12px; padding: 8px 12px 10px; min-width: 0; }
+.destino legend { font-weight: 700; padding: 0 4px; }
+.opcion { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; overflow-wrap: anywhere; }
+.opcion input { margin-top: 4px; flex: none; }
+
 /* fechas de juego, parejas y folleto */
 .plazo { margin: 0 0 12px; font-weight: 700; }
 .lista-parejas { width: 100%; border-collapse: collapse; font-size: .95rem; }

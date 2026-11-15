@@ -111,6 +111,56 @@ ok('indice.json: añade, reemplaza y ordena por fecha', () => {
   assert.strictEqual(n.torneos[1].fecha, '2026-10-13');
   assert.strictEqual(n.torneos[1].ganador, null);
 });
+ok('indice.json: un torneo que ya estaba conserva su sitio (el orden de portada lo decide la mesa)', () => {
+  const j = C.construir(C.leer(hoja(SP).ws), '2026-11-14T18:30:00Z');
+  const ind = { version: '1.0', publicado: 'a', torneos: [{ id: 'viejo', fecha: '2019-01-01' }, { id: 'sp-ejemplo', fecha: '2020-01-01' }, { id: 'otro', fecha: '2027-01-01' }] };
+  assert.deepStrictEqual(C.indiceNuevo(ind, j).torneos.map((x) => x.id), ['viejo', 'sp-ejemplo', 'otro']);
+});
+ok('indice.json: un torneo nuevo entra por fecha, el más reciente primero', () => {
+  const j = C.construir(C.leer(hoja(SP).ws), '2026-11-14T18:30:00Z');
+  const ind = { version: '1.0', publicado: 'a', torneos: [{ id: 'otro', fecha: '2027-01-01' }, { id: 'viejo', fecha: '2019-01-01' }] };
+  assert.deepStrictEqual(C.indiceNuevo(ind, j).torneos.map((x) => x.id), ['otro', 'sp-ejemplo', 'viejo']);
+});
+
+console.log('Índice: quitar, añadir y editar entradas (mesa de control)');
+const T = (id, estado, fecha) => ({ id, nombre: 'N ' + id, tipo: 'sp', temporada: '2026-27', fecha: fecha || '2026-01-01', estado, jornada_actual: 1, n_jornadas: 2, n_participantes: 4, ganador: null });
+const IND = { version: '1.0', publicado: 'a', torneos: [T('aaa', 'en_juego'), T('bbb', 'terminado'), T('ccc', 'en_juego'), T('ddd', 'en_juego')] };
+const idsDe = (i) => i.torneos.map((x) => x.id);
+ok('indiceSin quita una entrada y deja el resto como estaba', () => {
+  const n = C.indiceSin(IND, 'ccc', 'p');
+  assert.deepStrictEqual(idsDe(n), ['aaa', 'bbb', 'ddd']);
+  assert.strictEqual(n.publicado, 'p'); assert.strictEqual(n.version, '1.0');
+  assert.deepStrictEqual(idsDe(IND), ['aaa', 'bbb', 'ccc', 'ddd']); // no toca el original
+  assert.deepStrictEqual(idsDe(C.indiceSin(null, 'x', 'p')), []);
+});
+ok('indiceCon añade por fecha y, si ya estaba, la reemplaza en su sitio', () => {
+  assert.deepStrictEqual(idsDe(C.indiceCon(IND, T('nueva', 'en_juego', '2027-01-01'), 'p')), ['nueva', 'aaa', 'bbb', 'ccc', 'ddd']);
+  const n = C.indiceCon(IND, { ...T('ccc', 'terminado'), nombre: 'otro' }, 'p');
+  assert.deepStrictEqual(idsDe(n), ['aaa', 'bbb', 'ccc', 'ddd']); assert.strictEqual(n.torneos[2].nombre, 'otro');
+  assert.deepStrictEqual(idsDe(C.indiceCon(null, T('x', 'en_juego'), 'p')), ['x']);
+});
+ok('posicionEnGrupo cuenta solo los de su mismo estado', () => {
+  assert.strictEqual(C.posicionEnGrupo(IND, 'ccc'), 2);
+  assert.strictEqual(C.posicionEnGrupo(IND, 'bbb'), 1);
+  assert.strictEqual(C.posicionEnGrupo(IND, 'zzz'), 0);
+});
+ok('indiceEditado cambia nombre, temporada y estado y coloca la entrada en su grupo', () => {
+  const n = C.indiceEditado(IND, 'ddd', { nombre: 'Nuevo', temporada: null, estado: 'en_juego', orden: 1 }, 'p');
+  assert.deepStrictEqual(idsDe(n), ['ddd', 'aaa', 'bbb', 'ccc']);
+  assert.strictEqual(n.torneos[0].nombre, 'Nuevo'); assert.strictEqual(n.torneos[0].temporada, null);
+  assert.deepStrictEqual(idsDe(C.indiceEditado(IND, 'aaa', { nombre: 'N aaa', temporada: '2026-27', estado: 'en_juego', orden: 3 }, 'p')), ['bbb', 'ccc', 'ddd', 'aaa']);
+  assert.deepStrictEqual(idsDe(C.indiceEditado(IND, 'aaa', { nombre: 'N aaa', temporada: '2026-27', estado: 'en_juego', orden: 99 }, 'p')), ['bbb', 'ccc', 'ddd', 'aaa']);
+  assert.deepStrictEqual(idsDe(C.indiceEditado(IND, 'ccc', { nombre: 'N ccc', temporada: '2026-27', estado: 'en_juego', orden: 0 }, 'p')), ['ccc', 'aaa', 'bbb', 'ddd']);
+});
+ok('indiceEditado: al cambiar de estado, entra en el grupo nuevo en el puesto pedido y el ganador solo vale si terminó', () => {
+  const g = { id: 1, corto: 'A-B' };
+  const t = C.indiceEditado(IND, 'aaa', { nombre: 'N aaa', temporada: '2026-27', estado: 'terminado', orden: 2, ganador: g }, 'p');
+  assert.deepStrictEqual(idsDe(t), ['bbb', 'aaa', 'ccc', 'ddd']);
+  assert.deepStrictEqual(t.torneos[1].ganador, g); assert.strictEqual(t.torneos[1].estado, 'terminado');
+  const e = C.indiceEditado(t, 'aaa', { nombre: 'N aaa', temporada: '2026-27', estado: 'en_juego', orden: 1 }, 'p');
+  assert.strictEqual(e.torneos.find((x) => x.id === 'aaa').ganador, null);
+  assert.throws(() => C.indiceEditado(IND, 'zzz', { nombre: 'x', temporada: null, estado: 'en_juego', orden: 1 }, 'p'));
+});
 ok('indice.json: ganador cuando el torneo está terminado', () => {
   const j = C.construir(C.leer(hoja('sp-ejemplo-anterior').ws), 'x');
   const e = C.indiceNuevo(null, j).torneos[0];
