@@ -502,7 +502,7 @@
     }
   }
 
-  window.TuMesa = { el, poner, instante };
+  window.TuMesa = { el, poner };
 
   document.addEventListener('DOMContentLoaded', () => {
     bandaPrueba();

@@ -1,7 +1,7 @@
 /* publicar.html: lee la hoja WEB del Excel, valida y escribe los JSON en el repositorio. */
 (function () {
   'use strict';
-  const { el, poner, instante } = window.TuMesa;
+  const { el, poner } = window.TuMesa;
   const C = window.Contrato;
   const REPO = { dueno: 'ELIAN1603', nombre: 'campeonatos-domino', rama: 'main' };
   const CLAVE = 'tumesa.token';
@@ -199,7 +199,13 @@
         await conReintento(`datos/${id}/actual.json`, C.aTexto(C.conJornadas(j, C.jornadasNuevas(j, E.pub.actual))), E.pub.sha.actual);
         anota('Escribiendo indice.json…');
         await conReintento('datos/indice.json', C.aTexto(C.indiceNuevo(E.pub.indice, j)), E.pub.sha.indice);
-      } else anota('Era una jornada anterior: solo se ha corregido su archivo.');
+      } else {
+        // jornada anterior: actual.json sigue igual, pero su lista de jornadas tiene que incluirla (si no, la web no la enseña)
+        const { jornadas, ...resto } = E.pub.actual;
+        anota('Apuntando la jornada en actual.json…');
+        await conReintento(`datos/${id}/actual.json`, C.aTexto(C.conJornadas(resto, C.jornadasNuevas(j, E.pub.actual))), E.pub.sha.actual);
+        anota('Era una jornada anterior: solo se ha corregido su archivo.');
+      }
     } catch (e) {
       anota('✖ ' + (e.message || 'Algo ha fallado.'));
       anota('No se ha perdido nada: puedes volver a elegir el Excel y publicar otra vez.');
