@@ -188,16 +188,18 @@ const D = 'd=datos/_prueba';
     await pg.waitForSelector('li.mesa'); assert.strictEqual(await pg.locator('li.mesa').first().locator('.lado .n').count(), 4);
     assert.strictEqual(await pg.locator('nav.pestanas a').nth(2).innerText(), 'Jugadores');
     await sinDesborde('individual'); bien('individual: 2 jugadores contra 2');
-    // el 24º real: solo la J3 publicada → un solo botón, y se abre
+    // el 24º real: un botón por jornada publicada (según actual.json), y se abre la jornada en curso
+    const act24 = JSON.parse(require('fs').readFileSync('datos/sp-2026-27/actual.json', 'utf8'));
+    const nPub = (act24.jornadas || [act24.jornada]).length;
     await pg.goto(`${base}/torneo.html?t=sp-2026-27`);
     await pg.waitForSelector('table.clasi');
-    assert.strictEqual(await pg.locator('.jornadas button').count(), 1);
+    assert.strictEqual(await pg.locator('.jornadas button').count(), nPub);
     await pg.click('nav.pestanas a:has-text("Mesas")');
     await pg.waitForSelector('li.mesa');
-    assert.strictEqual(await pg.locator('.jornadas button').count(), 1);
-    assert.strictEqual(await pg.locator('.jornadas button[aria-pressed=true]').innerText(), '3');
+    assert.strictEqual(await pg.locator('.jornadas button').count(), nPub);
+    assert.strictEqual(await pg.locator('.jornadas button[aria-pressed=true]').innerText(), String(act24.jornada.numero));
     assert((await pg.locator('li.mesa').count()) >= 20);
-    await sinDesborde('24º mesas'); bien('24º real: un botón (J3), mesas con tarjeta, sin desbordar');
+    await sinDesborde('24º mesas'); bien(`24º real: ${nPub} botones, se abre la J${act24.jornada.numero}, mesas con tarjeta, sin desbordar`);
     if (capt) await pg.screenshot({ path: `${capt}/real_${w}.png`, fullPage: true });
     // enlace del buscador resalta la fila
     await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=mesas&p=3&${D}`);
