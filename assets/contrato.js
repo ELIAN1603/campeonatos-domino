@@ -200,8 +200,11 @@
     for (const f of j.clasificacion) { const p = j.participantes.find((x) => x.id === f.id); if (p && p.grupo !== f.grupo) { probs.push(`el ${f.id} está en dos grupos distintos`); break; } }
     if (probs.length) add('V07', 'bloquea', 'Los números no cuadran: ' + rango(probs) + '.');
     // V07b forma de las mesas
+    // descanso: 1+0. no_cuenta: 2 retiradas (1+1) o una retirada que le tocaba descansar (1+0). ausencia (individual): faltan asientos vacíos (de 1 a 2 por lado)
     const forma = j.emparejamientos.find((x) => {
       if (x.estado === 'descanso') return !(x.izq.length === 1 && x.dcha.length === 0);
+      if (x.estado === 'no_cuenta') return !(x.izq.length === 1 && x.dcha.length <= 1);
+      if (x.estado === 'ausencia' && t.tipo === 'individual') return !(x.izq.length <= 2 && x.dcha.length <= 2 && x.izq.length + x.dcha.length >= 1);
       return t.tipo === 'individual' ? !(x.izq.length === 2 && x.dcha.length === 2) : !(x.izq.length === 1 && x.dcha.length === 1);
     });
     if (forma) add('V07b', 'bloquea', `La mesa ${forma.mesa == null ? 'de descanso' : forma.mesa} no tiene ${t.tipo === 'individual' ? 'los jugadores' : 'las parejas'} que debería.`);

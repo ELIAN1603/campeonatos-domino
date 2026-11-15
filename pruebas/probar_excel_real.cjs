@@ -1,8 +1,8 @@
 // Prueba con un Excel real de un generador (hoja WEB de verdad, valores guardados): lo lee con SheetJS como hace
-// publicar.html y comprueba que sale el mismo JSON que escribe tools/sp/web_export.py (programas-domino).
+// publicar.html y comprueba que sale el mismo JSON que escribe tools/comun/web_export.py (programas-domino; sirve para sp, parejas e individual).
 // El Excel NO está ni debe estar en este repositorio: se pasa por ruta.
 //
-//   python3 -I <programas-domino>/tools/sp/web_export.py libro.xlsx /tmp/web --publicado 2026-01-01T00:00:00Z
+//   python3 -I <programas-domino>/tools/comun/web_export.py libro.xlsx /tmp/web --publicado 2026-01-01T00:00:00Z
 //   node pruebas/probar_excel_real.cjs libro.xlsx /tmp/web/<id>/jornada_NN.json [url-base, por defecto http://localhost:8765] [--ficticio]
 //   --ficticio: libro de los casos de prueba (nombres con cifras, que V06 bloquea). Solo comprueba la parte de Node y que V06 sea lo único que bloquea.
 //

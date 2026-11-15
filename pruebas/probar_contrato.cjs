@@ -76,6 +76,9 @@ ok('V07 puesto salteado', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(
 ok('V07 n_participantes', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, celda('n_participantes'), 7)), 'V07'), ['bloquea']));
 ok('V07 grupo B sin hay_b', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, 'K5', 'B')), 'V07'), ['bloquea']));
 ok('V07b mesa individual con 1+1', () => assert.deepStrictEqual(cod(con('individual-ejemplo-2026-11-14', (w) => { delete w['AG4']; }), 'V07b'), ['bloquea']));
+ok('V07b individual: mesa con ausencia y un asiento vacío (2+1) vale', () => assert.deepStrictEqual(cod(con('individual-ejemplo-2026-11-14', (w) => { poner(w, 'AJ5', 'ausencia'); delete w['AI5']; }), 'V07b'), []));
+ok('V07b individual: jugada con un asiento vacío bloquea', () => assert.deepStrictEqual(cod(con('individual-ejemplo-2026-11-14', (w) => { poner(w, 'AJ4', 'jugada'); delete w['AI4']; }), 'V07b'), ['bloquea']));
+ok('V07b parejas: no_cuenta 1+0 (retirada que descansaba) vale', () => assert.deepStrictEqual(cod(con('parejas-ejemplo-2026-11-14', (w) => { poner(w, 'AJ5', 'no_cuenta'); delete w['AH5']; }), 'V07b'), []));
 ok('V08 dt no cuadra', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, 'Y4', 999)), 'V08'), ['bloquea']));
 ok('V08 mesa jugada sin tantos', () => assert.deepStrictEqual(cod(con(SP, (w) => { delete w['AN5']; }), 'V08'), ['bloquea']));
 ok('V08b resultado raro', () => assert.deepStrictEqual(cod(con(SP, (w) => { poner(w, 'AL5', 3); poner(w, 'AM5', 0); }), 'V08b'), ['avisa']));

@@ -59,16 +59,16 @@ node pruebas/probar_seguridad.cjs
 - `probar_seguridad.cjs` comprueba la CSP y las demás etiquetas `<meta>` de las tres páginas, `robots.txt`, que las páginas cargan sin violaciones en consola y que los enlaces externos solo valen con https. `probar_publicar.cjs` comprueba además autor y committer de cada PUT, el rechazo de rutas fuera de `datos/` y el borrado del token ante un 401.
 - `probar_excel_real.cjs` necesita un Excel real; ver la sección siguiente.
 
-## Prueba con el Excel real del SP
+## Prueba con Excel reales (los tres tipos)
 
-`pruebas/probar_excel_real.cjs` lee un Excel de verdad (el del 24º SP y la demo del 23º), con SheetJS y con `publicar.html` en Chromium, y comprueba que el JSON es el mismo que escribe `tools/sp/web_export.py` de `programas-domino`. El Excel se pasa por ruta y no entra nunca en este repositorio.
+`pruebas/probar_excel_real.cjs` lee un Excel de verdad (SP, parejas o individual), con SheetJS y con `publicar.html` en Chromium, y comprueba que el JSON es el mismo que escribe `tools/comun/web_export.py` de `programas-domino`. El Excel se pasa por ruta y no entra nunca en este repositorio.
 
 ```bash
-python3 -I <programas-domino>/tools/sp/web_export.py libro.xlsx /tmp/web --publicado 2026-01-01T00:00:00Z
+python3 -I <programas-domino>/tools/comun/web_export.py libro.xlsx /tmp/web --publicado 2026-01-01T00:00:00Z
 node pruebas/probar_excel_real.cjs libro.xlsx /tmp/web/<id>/jornada_NN.json
 ```
 
-Resultado con los entregables de W2b (14/11/2026), sin cambiar `publicar.html` ni la web:
+Resultado con los entregables de W2b (14/11/2026), sin cambiar `publicar.html` ni la web. El 15/11/2026 (P3b) salió igual, 11 comprobaciones bien, con `DEMO_XXVI_Benimaclet_sin_macros.xlsx` (parejas, 74 parejas con grupo B) y con `DEMO_Individual_sin_macros.xlsx` (individual, 112 jugadores). Con los casos de prueba de parejas (S2–S5, S7) y de individual (I2) pasa la parte de Node con `--ficticio`.
 
 1. Valores guardados, vacíos, `A1` y fechas: SheetJS lee las fórmulas con su valor guardado. Las 4.500 celdas que dan `""` salen como `null`, `A1` es el texto `"1.0"` y las fechas son texto `aaaa-mm-dd`.
 2. Mismo JSON: `contrato.js` y `web_export.py` dan el mismo objeto en el 24º (jornada 3 en curso) y en el 23º (14 jornadas, grupo B). `publicar.html` escribe `jornada_NN.json` idéntico, byte a byte, salvo `publicado`. También coinciden en los casos S0–S7 de `programas-domino` (con `--ficticio`, porque sus nombres llevan cifras y V06 los bloquea a propósito) y en las jornadas con incomparecencia, No disputado, descanso, retirada y sustitución.
@@ -80,6 +80,6 @@ Resultado con los entregables de W2b (14/11/2026), sin cambiar `publicar.html` n
 2. El tiempo de lectura en el PC del árbitro (Windows 10, Chrome o Edge). Aquí tarda menos de un segundo, pero la máquina es otra.
 3. Que Pages sirva `datos/` con el retraso esperado y que el refresco de 60 segundos vea las publicaciones.
 4. Un Excel guardado por Excel de verdad. Los de prueba los guarda LibreOffice (y `inject_values.py` pone los valores), así que falta confirmar que Excel 2016 los guarda igual.
-5. Los casos que aún no tienen Excel: una retirada con grupo B, y los programas de parejas e individual (P3b).
+5. Una retirada con grupo B publicada con un Excel entregable (los casos de prueba de parejas e individual sí la cubren).
 
 Al cambiar `assets/`, sube el `?v=` de los `<link>` y `<script>` de los tres HTML, para que los navegadores no sigan usando la versión guardada (GitHub Pages la cachea 10 minutos).
