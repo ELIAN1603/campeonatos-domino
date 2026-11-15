@@ -66,7 +66,6 @@
       E.token = v;
       try {
         const r = await gh(`/repos/${REPO.dueno}/${REPO.nombre}`);
-        if (r.permissions && !r.permissions.push) throw new ErrorGH(403, 'El token se ve, pero no deja escribir. Hace falta el permiso «Contents: Read and write».');
         if (!guardado.poner(v)) { pintarToken('El navegador no deja guardar el token (¿ventana privada?). Se usará solo hasta que cierres esta pestaña.', true); return; }
         pintarToken('Token comprobado y guardado.');
       } catch (e) { E.token = null; boton.disabled = false; nota.textContent = e.message; nota.className = 'nota caja'; }
