@@ -53,8 +53,8 @@ const D = 'd=datos/_prueba';
     assert(!/en este grupo/.test(nota), nota);
     assert.strictEqual(await pg.locator('.plazo').innerText(), 'Jornada 3 · se juega del 10/11 al 23/11');
     assert(!/Cómo se ordena|criterio|desempate/i.test(await pg.locator('main').innerText()));
-    assert.deepStrictEqual(await pg.locator('nav.pestanas a').allInnerTexts(), ['Clasificación', 'Mesas', 'Resultados', 'Parejas', 'Folleto']);
-    bien('clasificación: nota sin recuento, fechas de juego, sin criterios y cinco pestañas en orden');
+    assert.deepStrictEqual(await pg.locator('nav.pestanas a').allInnerTexts(), ['Clasificación', 'Mesas', 'Parejas', 'Folleto']);
+    bien('clasificación: nota sin recuento, fechas de juego, sin criterios y cuatro pestañas en orden');
     const pendJ3 = JSON.parse(fs.readFileSync('datos/_prueba/sp-ejemplo/actual.json', 'utf8')).clasificacion.filter((r) => r.grupo === 'A' && r.pendiente).length;
     assert.strictEqual(await pg.locator('table.clasi .etq.pend').count(), pendJ3); // ⏳ = pendiente del JSON
     assert.strictEqual(await pg.locator('.jornadas button').count(), 3); // las completas y la que está en juego
@@ -88,9 +88,6 @@ const D = 'd=datos/_prueba';
     await pg.click('.jornadas button:has-text("3")');
     await pg.waitForSelector('.plazo');
     bien('mesas: fechas de juego de la jornada elegida');
-    await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=emparejamientos&${D}`);
-    await pg.waitForSelector('li.mesa'); assert(await pg.locator('nav.pestanas a[aria-current=page]').innerText() === 'Mesas');
-    bien('el enlace antiguo ver=emparejamientos abre Mesas');
     await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=mesas&${D}`);
     await pg.waitForSelector('li.mesa');
     await pg.click('.jornadas button:has-text("2")');
@@ -107,14 +104,34 @@ const D = 'd=datos/_prueba';
     await pg.fill('#filtro', '');
     await sinDesborde('emparejamientos'); bien('filtro por nombre y por número, y mensaje si nadie coincide');
     if (capt) await pg.screenshot({ path: `${capt}/emp_${w}.png`, fullPage: true });
-    // resultados de la jornada en curso se muestran según llegan
-    await pg.click('nav.pestanas a:has-text("Resultados")');
-    await pg.waitForSelector('.res b');
+    // Mesas = emparejamientos + resultados: una tarjeta por mesa, jornada en curso por defecto
+    assert.strictEqual(await pg.locator('.jornadas button').count(), 3);
+    assert.strictEqual(await pg.locator('.jornadas button[aria-pressed=true]').innerText(), '3');
+    assert.strictEqual(await pg.locator('.jornadas button.curso').innerText(), '3');
+    assert.strictEqual(await pg.locator('.jornadas button').first().evaluate((x) => getComputedStyle(x).borderRadius), '50%');
     const rs = await pg.locator('.res').allInnerTexts();
-    assert(rs.some((t) => t.includes('1-2') && t.includes('640-790')) && rs.some((t) => t.includes('2-0')));
-    assert(await pg.locator('text=Por jugar').first().isVisible());
-    await sinDesborde('resultados'); bien('resultados de la J3 en curso visibles y la mesa sin resultado como "por jugar"');
-    if (capt) await pg.screenshot({ path: `${capt}/res_${w}.png`, fullPage: true });
+    assert(rs.some((t) => t.includes('1-2') && t.includes('640-790 tantos')) && rs.some((t) => t.trim().toUpperCase() === 'RETIRADA'), rs.join('|'));
+    assert(!rs.some((t) => t.includes('2-0') && /retirada/i.test(t)), 'la retirada lleva etiqueta, no cifras');
+    assert(rs.some((t) => t.includes('⏳')), 'falta ⏳ en la mesa sin resultado');
+    const gana = await pg.locator('li.mesa', { hasText: '640-790' }).locator('.lado.gana');
+    assert.strictEqual(await gana.count(), 1); // el ganador no depende solo del color: ✓, negrita y barra
+    assert((await gana.innerText()).includes('✓'));
+    assert.strictEqual(await gana.locator('.nom').evaluate((x) => getComputedStyle(x).fontWeight), '800');
+    assert.strictEqual(await pg.locator('li.mesa:has(.res b)').first().locator('.n').count(), 2);
+    assert(!/Por jugar/.test(await pg.locator('#contenido h2').allInnerTexts().then((x) => x.join())), 'ya no hay bloque aparte de por jugar');
+    await sinDesborde('mesas con resultados'); bien('mesas: tarjetas con partidas y tantos, ⏳ si falta, ganador con ✓ y negrita, jornada en curso marcada');
+    if (capt) await pg.screenshot({ path: `${capt}/mesas_${w}.png`, fullPage: true });
+    // la J2 ya cerrada enseña sus resultados
+    await pg.click('.jornadas button:has-text("2")');
+    await pg.waitForFunction(() => document.querySelector('ul.mesas').innerText.includes('Pons-Dols'));
+    assert.strictEqual(await pg.locator('li.mesa .res:has-text("⏳")').count(), 0);
+    bien('mesas: la J2 cerrada, con sus resultados y sin ⏳');
+    for (const viejo of ['resultados', 'emparejamientos']) {
+      await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=${viejo}&${D}`);
+      await pg.waitForSelector('li.mesa');
+      assert.strictEqual(await pg.locator('nav.pestanas a[aria-current=page]').innerText(), 'Mesas');
+    }
+    bien('los enlaces antiguos ver=resultados y ver=emparejamientos abren Mesas');
     // parejas: nº, nombres, zona; nunca teléfonos
     await pg.click('nav.pestanas a:has-text("Parejas")');
     await pg.waitForSelector('table.lista-parejas');
@@ -164,11 +181,15 @@ const D = 'd=datos/_prueba';
     assert.strictEqual(await pg.locator('table.clasi tbody tr').count(), 4);
     await sinDesborde('grupo B'); bien('grupo A y B con su selector');
     if (capt) await pg.screenshot({ path: `${capt}/clasiB_${w}.png`, fullPage: true });
-    await pg.goto(`${base}/torneo.html?t=sp-ejemplo-anterior&ver=resultados&j=5&${D}`);
+    await pg.goto(`${base}/torneo.html?t=sp-ejemplo-anterior&ver=mesas&j=5&${D}`);
     await pg.waitForSelector('.res');
-    assert((await pg.locator('ul.mesas').first().innerText()).length > 0);
-    assert((await pg.locator('body').innerText()).includes('no disputado'));
-    await sinDesborde('ND'); bien('encuentro No disputado visible');
+    assert.strictEqual(await pg.locator('.etiq-estado.nd').first().innerText(), 'ND');
+    assert.strictEqual(await pg.locator('li.mesa:has(.etiq-estado.nd) .res b').count(), 0);
+    await sinDesborde('ND'); bien('encuentro No disputado: etiqueta ND en lugar del resultado');
+    for (const [est, txt] of [['incomparecencia', 'Incomparecencia'], ['descanso', 'Descansa']]) {
+      const n = await pg.locator('.etiq-estado.' + est).count();
+      if (n) assert.strictEqual((await pg.locator('.etiq-estado.' + est).first().innerText()).toLowerCase(), txt.toLowerCase());
+    }
     // retirada y descanso del parejas
     await pg.goto(`${base}/torneo.html?t=parejas-ejemplo-2026-11-14&ver=mesas&${D}`);
     await pg.waitForSelector('li.mesa'); assert((await pg.locator('body').innerText()).toLowerCase().includes('descansa'));
@@ -177,12 +198,23 @@ const D = 'd=datos/_prueba';
     // individual: dos y dos
     await pg.goto(`${base}/torneo.html?t=individual-ejemplo-2026-11-14&ver=mesas&${D}`);
     await pg.waitForSelector('li.mesa'); assert.strictEqual(await pg.locator('li.mesa').first().locator('.lado .n').count(), 4);
-    assert.strictEqual(await pg.locator('nav.pestanas a').nth(3).innerText(), 'Jugadores');
+    assert.strictEqual(await pg.locator('nav.pestanas a').nth(2).innerText(), 'Jugadores');
     await sinDesborde('individual'); bien('individual: 2 jugadores contra 2');
     // con un navegador que enseña PDF, el visor va integrado
     await pg.addInitScript(() => Object.defineProperty(navigator, 'pdfViewerEnabled', { get: () => true }));
     await pg.goto(`${base}/torneo.html?t=sp-calendario&ver=folleto&${D}`);
     await pg.waitForSelector('iframe.visor'); await sinDesborde('visor'); bien('folleto: vista integrada cuando el navegador enseña PDF');
+    // el 24º real: solo la J3 publicada → un solo botón, y se abre
+    await pg.goto(`${base}/torneo.html?t=sp-2026-27`);
+    await pg.waitForSelector('table.clasi');
+    assert.strictEqual(await pg.locator('.jornadas button').count(), 1);
+    await pg.click('nav.pestanas a:has-text("Mesas")');
+    await pg.waitForSelector('li.mesa');
+    assert.strictEqual(await pg.locator('.jornadas button').count(), 1);
+    assert.strictEqual(await pg.locator('.jornadas button[aria-pressed=true]').innerText(), '3');
+    assert((await pg.locator('li.mesa').count()) >= 20);
+    await sinDesborde('24º mesas'); bien('24º real: un botón (J3), mesas con tarjeta, sin desbordar');
+    if (capt) await pg.screenshot({ path: `${capt}/real_${w}.png`, fullPage: true });
     // enlace del buscador resalta la fila
     await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=mesas&p=3&${D}`);
     await pg.waitForSelector('li.mesa.resalte'); bien('?p= resalta la mesa del jugador');

@@ -9,7 +9,7 @@ Este repositorio es público. **Nunca entra un Excel, un teléfono ni una licenc
 | Ruta | Para qué |
 |---|---|
 | `index.html` | Portada: campeonatos en juego y terminados, y buscador de jugador |
-| `torneo.html?t=<id>` | Un campeonato: Clasificación, Mesas, Resultados, Parejas y Folleto |
+| `torneo.html?t=<id>` | Un campeonato: Clasificación, Mesas, Parejas y Folleto |
 | `publicar.html` | Para la mesa de control: lee la hoja WEB del Excel, valida y escribe los JSON |
 | `assets/` | Estilo, código de la web, código del contrato de datos y SheetJS (copia local, sin CDN) |
 | `datos/indice.json` | Lista de campeonatos que ve la portada. Lo escribe `publicar.html` |
@@ -22,7 +22,8 @@ El formato de los JSON y de la hoja WEB está en `docs/W2_contrato_datos.md` del
 ## Cómo decide la web qué enseña
 
 - La clasificación va en vivo, como en el Excel: en cuanto la jornada en curso tiene un resultado, se ve esa jornada, reordenada, con ⏳ en quien aún no ha jugado (`pendiente` del JSON; lleva sus cifras de antes). Mientras no haya ningún resultado, se ve la última jornada cerrada.
-- Bajo el selector de jornada, en Clasificación y en Mesas, sale «Jornada N · se juega del dd/mm al dd/mm» con `plazo_desde` y `plazo_hasta`; si están vacíos no sale nada.
+- Clasificación y Mesas llevan una fila de botones redondos, uno por jornada publicada, con la jornada en curso marcada. Mesas se abre en la jornada en curso y enseña una tarjeta por mesa: número, las dos parejas de esa jornada y el resultado (partidas y tantos; ⏳ si falta; una etiqueta en ND, incomparecencia, descanso y retirada). Los enlaces antiguos `ver=resultados` y `ver=emparejamientos` llevan a Mesas.
+- Bajo los botones de jornada, sale «Jornada N · se juega del dd/mm al dd/mm» con `plazo_desde` y `plazo_hasta`; si están vacíos no sale nada.
 - La pestaña Folleto enseña el calendario (clave opcional `calendario` de `actual.json`, con la jornada en curso resaltada) y el PDF `datos/<id>/folleto.pdf`, con descarga y vista integrada si el navegador la admite. El folleto se sube a mano y nunca lleva teléfonos ni cuentas bancarias. Detalle en `docs/W2_contrato_datos.md`, sección 12.
 - La web no enseña criterios de clasificación; la leyenda de columnas sí.
 - Cada jornada conserva los nombres que tenía cuando se publicó, así que una sustitución no reescribe las anteriores.
