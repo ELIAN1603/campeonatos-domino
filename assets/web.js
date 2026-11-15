@@ -209,7 +209,7 @@
   /* =====================================================================
      PÁGINA DE TORNEO
      ===================================================================== */
-  const PESTANAS = [['clasificacion', 'Clasificación'], ['mesas', 'Mesas'], ['parejas', 'Parejas'], ['folleto', 'Normativa']];
+  const PESTANAS = [['clasificacion', 'Clasificación'], ['mesas', 'Mesas'], ['parejas', 'Parejas'], ['folleto', 'Calendario']];
   const ANTIGUAS = { emparejamientos: 'mesas', resultados: 'mesas', normativa: 'folleto' }; // enlaces de antes del cambio de pestañas
   const E = { id: null, actual: null, cache: new Map(), ver: 'clasificacion', j: null, g: 'A', p: null, q: '' };
 
@@ -434,7 +434,7 @@
         el('td', { class: 'zona' }, p.zona)))))));
   }
 
-  /* ----- folleto: calendario + PDF ----- */
+  /* ----- calendario ----- */
   function calendario(a) {
     const filas = (Array.isArray(a.calendario) ? a.calendario : []).filter((c) => c && Number.isInteger(c.jornada) && corta(c.desde) && corta(c.hasta));
     if (!filas.length) return null;
@@ -444,24 +444,9 @@
         el('span', { class: 'num' }, el('small', null, tp.jornada), c.jornada, c.jornada_b != null ? el('b', { class: 'b' }, 'B' + c.jornada_b) : null),
         el('span', { class: 'fechas' }, `${corta(c.desde)} – ${corta(c.hasta)}`)))));
   }
-  // El PDF vive en datos/<id>/folleto.pdf; `torneo.folleto` (opcional) puede dar otro nombre de archivo o un https.
-  function rutaFolleto(t) {
-    const f = t.folleto;
-    if (/^https:\/\/\S+$/.test(f || '')) return f;
-    return `${BASE}/${E.id}/${/^[\w.-]+\.pdf$/.test(f || '') ? f : 'folleto.pdf'}`;
-  }
-  async function pintarFolleto(cont) {
-    const a = E.actual, t = a.torneo, ruta = rutaFolleto(t);
-    let hay = false;
-    try { hay = (await fetch(ruta, { method: 'HEAD' })).ok; } catch (e) { /* sin red */ }
-    if (E.ver !== 'folleto') return;
-    const nombre = `Normativa de ${t.nombre}`;
-    poner(cont, calendario(a),
-      hay ? el('section', { class: 'folleto' },
-        el('p', null, el('a', { class: 'boton', href: ruta, download: '', rel: 'noopener' }, 'Descargar la normativa (PDF)')),
-        navigator.pdfViewerEnabled ? el('iframe', { class: 'visor', src: ruta, title: nombre }) : el('p', { class: 'nota' }, 'Este navegador no enseña PDF aquí. Descárgalo con el botón.'))
-        : [t.normativa_url ? el('p', null, el('a', { class: 'boton', href: t.normativa_url, rel: 'noopener noreferrer', target: '_blank' }, 'Abrir la normativa')) : null,
-          el('p', { class: 'vacio' }, 'La mesa de control todavía no ha subido la normativa de este campeonato.')]);
+  // La normativa en PDF la reparte el árbitro por su cuenta (decisión del 15/11/2026): aquí solo el calendario.
+  function pintarFolleto(cont) {
+    poner(cont, calendario(E.actual) || el('p', { class: 'vacio' }, 'Este campeonato no tiene calendario publicado.'));
   }
 
   /* ----- orquestación ----- */
@@ -474,7 +459,7 @@
     if (E.ver === 'clasificacion') await pintarClasificacion(cont);
     else if (E.ver === 'mesas') await pintarMesas(cont);
     else if (E.ver === 'parejas') pintarParejas(cont);
-    else await pintarFolleto(cont);
+    else pintarFolleto(cont);
   }
 
   async function sondear() {

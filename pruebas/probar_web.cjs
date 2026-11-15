@@ -53,7 +53,7 @@ const D = 'd=datos/_prueba';
     assert(!/en este grupo/.test(nota), nota);
     assert.strictEqual(await pg.locator('.plazo').innerText(), 'Jornada 3 · se juega del 10/11 al 23/11');
     assert(!/Cómo se ordena|criterio|desempate/i.test(await pg.locator('main').innerText()));
-    assert.deepStrictEqual(await pg.locator('nav.pestanas a').allInnerTexts(), ['Clasificación', 'Mesas', 'Parejas', 'Normativa']);
+    assert.deepStrictEqual(await pg.locator('nav.pestanas a').allInnerTexts(), ['Clasificación', 'Mesas', 'Parejas', 'Calendario']);
     bien('clasificación: nota sin recuento, fechas de juego, sin criterios y cuatro pestañas en orden');
     const pendJ3 = JSON.parse(fs.readFileSync('datos/_prueba/sp-ejemplo/actual.json', 'utf8')).clasificacion.filter((r) => r.grupo === 'A' && r.pendiente).length;
     assert.strictEqual(await pg.locator('table.clasi .etq.pend').count(), pendJ3); // ⏳ = pendiente del JSON
@@ -150,27 +150,15 @@ const D = 'd=datos/_prueba';
     assert((await pg.locator('.calendario li.curso').innerText()).replace(/\s+/g, ' ').includes('3 '), 'la jornada 3 debe estar resaltada');
     assert.deepStrictEqual(await pg.locator('.calendario .b').allInnerTexts(), ['B1', 'B2', 'B3']);
     assert((await pg.locator('.calendario li').nth(2).innerText()).includes('10/11 – 23/11'));
-    const enl = pg.locator('a[download]'); assert((await enl.getAttribute('href')).endsWith('sp-calendario/folleto.pdf'));
-    const visor = await pg.evaluate(() => !!navigator.pdfViewerEnabled);
-    assert.strictEqual(await pg.locator('iframe.visor').count(), visor ? 1 : 0);
-    await sinDesborde('folleto'); bien(`folleto con calendario (14 jornadas, B1-B3, J3 resaltada), descarga y ${visor ? 'vista integrada' : 'sin vista integrada (el navegador no enseña PDF)'}`);
+    assert.strictEqual(await pg.locator('a[download], iframe').count(), 0, 'sin PDF de normativa');
+    await sinDesborde('calendario'); bien('calendario: 14 jornadas, B1-B3, J3 resaltada, sin PDF');
     if (capt) await pg.screenshot({ path: `${capt}/folleto_${w}.png`, fullPage: true });
-    // sin "calendario" en el JSON, y sin PDF
+    // sin "calendario" en el JSON
     await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=folleto&${D}`);
-    await pg.waitForSelector('text=todavía no ha subido el folleto'); assert.strictEqual(await pg.locator('.calendario').count(), 0);
-    await pg.goto(`${base}/torneo.html?t=sp-ejemplo-anterior&ver=folleto&${D}`);
-    await pg.waitForSelector('text=todavía no ha subido el folleto');
-    assert.strictEqual(await pg.locator('.calendario').count(), 0);
-    await sinDesborde('folleto sin calendario'); bien('folleto: sin clave calendario ni PDF no sale calendario y se explica');
+    await pg.waitForSelector('text=no tiene calendario publicado'); assert.strictEqual(await pg.locator('.calendario').count(), 0);
     await pg.goto(`${base}/torneo.html?t=sp-ejemplo-anterior&ver=normativa&${D}`);
-    await pg.waitForSelector('text=todavía no ha subido la normativa'); bien('el enlace antiguo ver=normativa abre Normativa');
-    errs.length = 0; // los 404 de HEAD de un folleto que no existe son lo esperado
-    // el folleto real del 24º: existe y no lleva ni teléfono ni IBAN
-    const hr = await pg.request.head(`${base}/datos/sp-2026-27/folleto.pdf`); assert(hr.ok());
-    try {
-      const t = require('child_process').execFileSync('pdftotext', ['datos/sp-2026-27/folleto.pdf', '-'], { encoding: 'utf8' });
-      assert(!/611|692|ES76|3159|IBAN/i.test(t)); bien('folleto real del 24º sin teléfono ni IBAN (pdftotext)');
-    } catch (e) { if (e.code !== 'ENOENT') throw e; }
+    await pg.waitForSelector('text=no tiene calendario publicado'); bien('sin clave calendario se explica; ver=normativa abre Calendario');
+    assert(!(await pg.request.head(`${base}/datos/sp-2026-27/folleto.pdf`)).ok(), 'el folleto del 24º ya no se publica');
 
     // torneo terminado con grupo B, ND, incomparecencia
     await pg.goto(`${base}/torneo.html?t=sp-ejemplo-anterior&${D}`);
@@ -200,10 +188,6 @@ const D = 'd=datos/_prueba';
     await pg.waitForSelector('li.mesa'); assert.strictEqual(await pg.locator('li.mesa').first().locator('.lado .n').count(), 4);
     assert.strictEqual(await pg.locator('nav.pestanas a').nth(2).innerText(), 'Jugadores');
     await sinDesborde('individual'); bien('individual: 2 jugadores contra 2');
-    // con un navegador que enseña PDF, el visor va integrado
-    await pg.addInitScript(() => Object.defineProperty(navigator, 'pdfViewerEnabled', { get: () => true }));
-    await pg.goto(`${base}/torneo.html?t=sp-calendario&ver=folleto&${D}`);
-    await pg.waitForSelector('iframe.visor'); await sinDesborde('visor'); bien('folleto: vista integrada cuando el navegador enseña PDF');
     // el 24º real: solo la J3 publicada → un solo botón, y se abre
     await pg.goto(`${base}/torneo.html?t=sp-2026-27`);
     await pg.waitForSelector('table.clasi');
