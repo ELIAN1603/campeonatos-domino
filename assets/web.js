@@ -214,7 +214,7 @@
   /* =====================================================================
      PÁGINA DE TORNEO
      ===================================================================== */
-  const PESTANAS = [['clasificacion', 'Clasificación'], ['mesas', 'Mesas'], ['parejas', 'Parejas'], ['folleto', 'Calendario']];
+  const PESTANAS = [['clasificacion', 'Clasificación'], ['mesas', 'Mesas'], ['parejas', 'Parejas'], ['folleto', 'Calendario'], ['linea', 'Línea de tiempo']];
   const ANTIGUAS = { emparejamientos: 'mesas', resultados: 'mesas', normativa: 'folleto' }; // enlaces de antes del cambio de pestañas
   const E = { id: null, actual: null, cache: new Map(), ver: 'clasificacion', j: null, g: 'A', p: null, q: '', cal: 'lista' };
 
@@ -227,10 +227,11 @@
     E.g = x.get('g') === 'B' ? 'B' : 'A';
     E.p = +x.get('p') || null;
     E.cal = x.get('cal') === 'linea' ? 'linea' : 'lista';
+    if (E.ver === 'folleto' && E.cal === 'linea') E.ver = 'linea'; // enlaces de la vista con sub-pestañas
   }
   function irA(cambios, empujar) {
     Object.assign(E, cambios);
-    const nueva = url('torneo.html', { t: E.id, ver: E.ver === 'clasificacion' ? '' : E.ver, j: E.j, g: E.g === 'B' ? 'B' : '', p: E.p, cal: E.ver === 'folleto' ? E.cal : '' });
+    const nueva = url('torneo.html', { t: E.id, ver: E.ver === 'clasificacion' ? '' : E.ver, j: E.j, g: E.g === 'B' ? 'B' : '', p: E.p });
     if (empujar) history.pushState(null, '', nueva); else history.replaceState(null, '', nueva);
     pintar();
   }
@@ -441,7 +442,6 @@
   }
 
   /* ----- calendario: dos vistas (Lista y Línea de tiempo) ----- */
-  const CALS = [['lista', 'Lista'], ['linea', 'Línea de tiempo']];
   const diaN = (iso) => { const f = partesFecha(iso); return Date.UTC(f.a, f.m - 1, f.d) / 864e5; };
   const dm = (iso) => { const f = partesFecha(iso); return `${f.d}/${f.m}`; };
   const dma = (iso) => `${dm(iso)}/${partesFecha(iso).a}`;
@@ -524,14 +524,10 @@
       el('ol', { class: conB ? 'con-b' : null }, lis));
   }
 
-  function pintarFolleto(cont) {
+  // Provisional (15/11/2026): las dos vistas del calendario conviven en dos pestañas hasta que se elija una.
+  function pintarFolleto(cont, linea) {
     const filas = filasCalendario(E.actual);
-    const sub = el('nav', { class: 'subpestanas', 'aria-label': 'Vista del calendario' }, CALS.map(([k, txt]) => el('a', {
-      href: url('torneo.html', { t: E.id, ver: 'folleto', cal: k, p: E.p }), 'aria-current': E.cal === k ? 'page' : null,
-      onclick: (ev) => { if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return; ev.preventDefault(); E.enfocar = true; irA({ cal: k }, true); },
-    }, txt)));
-    poner(cont, sub, !filas.length ? el('p', { class: 'vacio' }, 'Este campeonato no tiene calendario publicado.') : E.cal === 'linea' ? calLinea(E.actual, filas) : calLista(E.actual, filas));
-    if (E.enfocar) { E.enfocar = false; const x = $('.subpestanas a[aria-current]', cont); if (x) x.focus(); }
+    poner(cont, !filas.length ? el('p', { class: 'vacio' }, 'Este campeonato no tiene calendario publicado.') : linea ? calLinea(E.actual, filas) : calLista(E.actual, filas));
   }
 
   /* ----- orquestación ----- */
@@ -544,7 +540,7 @@
     if (E.ver === 'clasificacion') await pintarClasificacion(cont);
     else if (E.ver === 'mesas') await pintarMesas(cont);
     else if (E.ver === 'parejas') pintarParejas(cont);
-    else pintarFolleto(cont);
+    else pintarFolleto(cont, E.ver === 'linea');
   }
 
   async function sondear() {

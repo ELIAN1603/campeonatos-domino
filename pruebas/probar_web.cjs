@@ -53,7 +53,7 @@ const D = 'd=datos/_prueba';
     assert(!/en este grupo/.test(nota), nota);
     assert.strictEqual(await pg.locator('.plazo').innerText(), 'Jornada 3 · se juega del 10/11 al 23/11');
     assert(!/Cómo se ordena|criterio|desempate/i.test(await pg.locator('main').innerText()));
-    assert.deepStrictEqual(await pg.locator('nav.pestanas a').allInnerTexts(), ['Clasificación', 'Mesas', 'Parejas', 'Calendario']);
+    assert.deepStrictEqual(await pg.locator('nav.pestanas a').allInnerTexts(), ['Clasificación', 'Mesas', 'Parejas', 'Calendario', 'Línea de tiempo']);
     bien('clasificación: nota sin recuento, fechas de juego, sin criterios y cuatro pestañas en orden');
     const pendJ3 = JSON.parse(fs.readFileSync('datos/_prueba/sp-ejemplo/actual.json', 'utf8')).clasificacion.filter((r) => r.grupo === 'A' && r.pendiente).length;
     assert.strictEqual(await pg.locator('table.clasi .etq.pend').count(), pendJ3); // ⏳ = pendiente del JSON
@@ -142,12 +142,10 @@ const D = 'd=datos/_prueba';
     assert(!/\d{9}|tel[eé]f|licencia/i.test(await pg.locator('main').innerText()));
     await sinDesborde('parejas'); bien(`parejas: ${ap.length} filas con nº, los dos jugadores y zona; sin teléfonos`);
     if (capt) await pg.screenshot({ path: `${capt}/parejas_${w}.png`, fullPage: true });
-    // Calendario: dos sub-pestañas (Lista por defecto y Línea de tiempo), recordadas en la URL
+    // Calendario (lista) y Línea de tiempo, dos pestañas provisionales
     await pg.clock.setFixedTime(new Date('2026-11-15T10:00:00')); // «hoy» fijo: la J3 en curso
     await pg.goto(`${base}/torneo.html?t=sp-calendario&ver=folleto&${D}`); // actual.json de ejemplo con la clave "calendario"
     await pg.waitForSelector('.calendario li');
-    assert.deepStrictEqual(await pg.locator('.subpestanas a').allInnerTexts(), ['Lista', 'Línea de tiempo']);
-    assert.strictEqual(await pg.locator('.subpestanas a[aria-current=page]').innerText(), 'Lista', 'Lista es la vista por defecto');
     assert.strictEqual(await pg.locator('.linea-tiempo').count(), 0);
     assert.strictEqual(await pg.locator('.calendario li').count(), 14);
     assert.strictEqual(await pg.locator('.calendario li.curso').count(), 1);
@@ -156,19 +154,15 @@ const D = 'd=datos/_prueba';
     assert((await pg.locator('.calendario li').nth(0).innerText()).includes('13/10 – 26/10/2026'));
     assert((await pg.locator('.calendario li').nth(2).innerText()).includes('10/11 – 23/11/2026'));
     assert.strictEqual(await pg.locator('a[download], iframe').count(), 0, 'sin PDF de normativa');
-    await sinDesborde('calendario lista'); bien('lista: 14 jornadas con el año, B1-B3, J3 resaltada, por defecto');
+    await sinDesborde('calendario lista'); bien('lista: 14 jornadas con el año, B1-B3, J3 resaltada');
     if (capt) await pg.screenshot({ path: `${capt}/cal_lista_${w}.png`, fullPage: true });
-    // la URL recuerda la vista
-    await pg.click('.subpestanas a:has-text("Línea de tiempo")');
+    // pestaña Línea de tiempo (y los enlaces antiguos con cal=linea llevan a ella)
+    await pg.click('nav.pestanas a:has-text("Línea de tiempo")');
     await pg.waitForSelector('.linea-tiempo li');
-    assert(/[?&]cal=linea\b/.test(pg.url()), pg.url());
-    assert.strictEqual(await pg.evaluate(() => document.activeElement.textContent), 'Línea de tiempo', 'el foco se queda en la sub-pestaña');
-    await pg.reload(); await pg.waitForSelector('.linea-tiempo li');
-    assert.strictEqual(await pg.locator('.subpestanas a[aria-current=page]').innerText(), 'Línea de tiempo');
-    await pg.click('.subpestanas a:has-text("Lista")'); await pg.waitForSelector('.calendario li');
-    assert(/[?&]cal=lista\b/.test(pg.url()), pg.url());
-    await pg.goBack(); await pg.waitForSelector('.linea-tiempo li');
-    bien('la sub-pestaña elegida va en la URL (cal=linea / cal=lista), sobrevive a recargar y al botón Atrás');
+    assert(/[?&]ver=linea\b/.test(pg.url()), pg.url());
+    await pg.goto(`${base}/torneo.html?t=sp-calendario&ver=folleto&cal=linea&${D}`); await pg.waitForSelector('.linea-tiempo li');
+    assert.strictEqual(await pg.locator('nav.pestanas a[aria-current=page]').innerText(), 'Línea de tiempo');
+    bien('pestaña Línea de tiempo; el enlace antiguo cal=linea lleva a ella');
     // línea de tiempo
     const lt = pg.locator('.linea-tiempo li');
     assert.strictEqual(await lt.count(), 14);
@@ -206,7 +200,7 @@ const D = 'd=datos/_prueba';
     assert.strictEqual(fuera, 0, 'elementos fuera de la pantalla');
     if (capt) await pg.screenshot({ path: `${capt}/cal_linea_${w}.png`, fullPage: true });
     // el 24º real: J5 (3 semanas) más alta que J6 (2), proporcional a los días
-    await pg.goto(`${base}/torneo.html?t=sp-2026-27&ver=folleto&cal=linea`);
+    await pg.goto(`${base}/torneo.html?t=sp-2026-27&ver=linea`);
     await pg.waitForSelector('.linea-tiempo li');
     const alto = (await pg.locator('.linea-tiempo li').evaluateAll((l) => l.map((x) => x.getBoundingClientRect().height)));
     assert(alto[4] > alto[5], `J5 ${alto[4]} debe ser más alta que J6 ${alto[5]}`);
@@ -218,7 +212,7 @@ const D = 'd=datos/_prueba';
     assert.strictEqual(await pg.locator('.linea-tiempo .anio').count(), 2);
     assert((await pg.locator('.linea-tiempo li').nth(4).locator('.corte').count()) === 1, 'el 1/1 cae dentro de la J5 (15/12 a 4/1)');
     assert((await pg.locator('.calendario').count()) === 0);
-    await pg.click('.subpestanas a:has-text("Lista")'); await pg.waitForSelector('.calendario li');
+    await pg.goto(`${base}/torneo.html?t=sp-2026-27&ver=folleto`); await pg.waitForSelector('.calendario li');
     assert((await pg.locator('.calendario li').nth(4).innerText()).includes('15/12/2026 – 4/1/2027'), 'jornada que cruza de año');
     assert((await pg.locator('.calendario li').nth(0).innerText()).includes('13/10 – 26/10/2026'));
     await sinDesborde('24º calendario'); bien('24º real: J5 (21 días) 1,5 veces la altura de J6 (14), cruce de año en J5, lista «15/12/2026 – 4/1/2027»');
@@ -226,8 +220,8 @@ const D = 'd=datos/_prueba';
     assert.deepStrictEqual(errs, [], 'la consola no debe mostrar violaciones de la CSP ni errores'); errs.length = 0;
     bien('consola limpia en las dos vistas (sin violaciones de CSP)');
     // sin "calendario" en el JSON, las dos vistas dan el mensaje de siempre
-    for (const cal of ['lista', 'linea']) {
-      await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=folleto&cal=${cal}&${D}`);
+    for (const ver of ['folleto', 'linea']) {
+      await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=${ver}&${D}`);
       await pg.waitForSelector('text=no tiene calendario publicado');
       assert.strictEqual(await pg.locator('.calendario, .linea-tiempo').count(), 0);
     }
