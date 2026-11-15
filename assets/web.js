@@ -222,7 +222,7 @@
   /* =====================================================================
      PÁGINA DE TORNEO
      ===================================================================== */
-  const PESTANAS = [['clasificacion', 'Clasificación'], ['mesas', 'Mesas y resultados'], ['parejas', 'Parejas'], ['folleto', 'Calendario']];
+  const PESTANAS = [['clasificacion', 'Clasificación'], ['mesas', 'Partidas'], ['parejas', 'Parejas'], ['folleto', 'Calendario']];
   const ANTIGUAS = { emparejamientos: 'mesas', resultados: 'mesas', normativa: 'folleto', linea: 'folleto' }; // enlaces de antes del cambio de pestañas
   const E = { id: null, actual: null, cache: new Map(), ver: 'clasificacion', j: null, g: 'A', p: null, q: '' };
 
