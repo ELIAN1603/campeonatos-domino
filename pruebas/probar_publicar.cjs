@@ -19,6 +19,8 @@ const sinPub = (o) => { const c = JSON.parse(JSON.stringify(o)); delete c.public
   const ctx = await b.newContext({ viewport: { width: 1000, height: 900 } });
   const pg = await ctx.newPage();
   const errores = []; pg.on('pageerror', (e) => errores.push(e.message));
+  pg.on('console', (m) => /Content Security Policy|Refused to/i.test(m.text()) && errores.push('consola: ' + m.text())); // los 404/409/401 de la API simulada también salen en consola; esos no cuentan
+  await pg.addInitScript(() => { window.__csp = []; document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI)); });
   await pg.route('https://api.github.com/**', async (route) => {
     const req = route.request(); const u = new URL(req.url());
     const cab = req.headers();
@@ -36,7 +38,7 @@ const sinPub = (o) => { const c = JSON.parse(JSON.stringify(o)); delete c.public
     if (f && c.sha !== f.sha) return route.fulfill({ status: 409, body: '{}' });
     if (!f && c.sha) return route.fulfill({ status: 422, body: '{}' });
     repo.set(ruta, { sha: 's' + ++n, texto: Buffer.from(c.content, 'base64').toString('utf8') });
-    puts.push({ ruta, mensaje: c.message, rama: c.branch });
+    puts.push({ ruta, mensaje: c.message, rama: c.branch, author: c.author, committer: c.committer });
     return route.fulfill({ status: 201, contentType: 'application/json', body: '{"content":{},"commit":{}}' });
   });
   let ok = 0; const bien = (t) => { ok++; console.log('  ok  ' + t); };
@@ -63,6 +65,11 @@ const sinPub = (o) => { const c = JSON.parse(JSON.stringify(o)); delete c.public
   await pg.waitForSelector('text=termina en .xlsx');
   bien('archivo que no es Excel');
 
+  // archivo desmesurado: se rechaza sin leerlo
+  await pg.setInputFiles('#archivo', { name: 'enorme.xlsx', mimeType: 'application/octet-stream', buffer: Buffer.alloc(26 * 1024 * 1024) });
+  await pg.waitForSelector('text=demasiado grande');
+  bien('límite de tamaño: un archivo de 26 MB se rechaza');
+
   // Excel con un teléfono: bloquea
   const mal = path.join(tmp, 'mal.xlsx');
   execFileSync('python3', ['-c', `
@@ -87,6 +94,9 @@ exec(src)`]);
   await pg.waitForSelector('text=Publicado.');
   assert.deepStrictEqual(puts.map((p) => p.ruta), ['datos/sp-ejemplo/jornada_03.json', 'datos/sp-ejemplo/actual.json', 'datos/indice.json']);
   assert.strictEqual(puts[0].rama, 'main');
+  const NOREPLY = { name: 'Mesa de control', email: '356692983+ELIAN1603@users.noreply.github.com' };
+  for (const p of puts) { assert.deepStrictEqual(p.author, NOREPLY); assert.deepStrictEqual(p.committer, NOREPLY); }
+  bien('cada PUT lleva author y committer con el correo noreply (' + puts.length + ' PUT)');
   const esp = leerJson('sp-ejemplo/actual.json'); const { jornadas, ...espJornada } = esp;
   const j3 = JSON.parse(repo.get('datos/sp-ejemplo/jornada_03.json').texto);
   assert.deepStrictEqual(sinPub(j3), sinPub(espJornada));
@@ -135,6 +145,33 @@ exec(open(r'${path.join(__dirname, 'hacer_xlsx.py')}',encoding='utf-8').read())`
   assert.deepStrictEqual(act2.jornadas.map((x) => [x.numero, x.completa]), [[2, true], [3, false]]); // si no, la web no enseña la J2
   assert.deepStrictEqual(sinPub({ ...act2, jornadas: null }), sinPub({ ...act, jornadas: null })); // el resto de actual.json no cambia
   bien('V09: jornada anterior pide casilla, escribe jornada_02.json y la apunta en la lista de actual.json');
+
+  // Rutas fuera de datos/: se rechazan antes de llamar a GitHub
+  puts.length = 0;
+  const malas = ['assets/web.js', '.github/workflows/x.yml', 'README.md', 'datos/_prueba/actual.json', 'datos/../README.md', 'datos/sp-ejemplo/otro.json', 'datos/sp-ejemplo/jornada_1.json', 'datos/SP/actual.json', 'datos/sp-ejemplo/x/actual.json', 'datos/indice.json/..', '/datos/indice.json', 'datos/sp-ejemplo/actual.json\n'];
+  for (const r of malas) {
+    const msg = await pg.evaluate((r) => window.TuMesa.escribir(r, '{}', null, 'x').then(() => 'ESCRIBIÓ', (e) => e.message), r);
+    assert(/Ruta no permitida/.test(msg), r + ' → ' + msg);
+  }
+  assert.strictEqual(puts.length, 0);
+  bien('rutas fuera de datos/ (' + malas.length + ' casos): rechazadas y sin ningún PUT');
+  for (const r of ['datos/indice.json', 'datos/sp-ejemplo/actual.json', 'datos/sp-ejemplo/jornada_05.json']) {
+    assert.strictEqual(await pg.evaluate((r) => window.TuMesa.escribir(r, '{}', null, 'x').then(() => 'ok', (e) => e.message), r).then((m) => /Ruta no permitida/.test(m)), false, r);
+  }
+  puts.length = 0;
+  bien('las tres rutas permitidas pasan el filtro');
+
+  assert.deepStrictEqual(await pg.evaluate(() => window.__csp), []);
+  bien('CSP: ninguna violación en publicar.html (lee el Excel y publica)');
+
+  // GitHub responde 401 (token caducado): se borra del navegador y se avisa
+  await pg.evaluate(() => localStorage.setItem('tumesa.token', 'ghp_CADUCADO'));
+  await pg.goto(base + '/publicar.html');
+  await pg.setInputFiles('#archivo', xlsx('sp-ejemplo'));
+  await pg.waitForSelector('text=Lo he borrado de este navegador');
+  assert.strictEqual(await pg.evaluate(() => localStorage.getItem('tumesa.token')), null);
+  await pg.waitForSelector('#token');
+  bien('401: el token se borra del navegador, se avisa y se pide uno nuevo');
 
   assert.deepStrictEqual(errores, []);
   bien('sin errores de JavaScript en la página');

@@ -4,14 +4,19 @@
 
   /* ---------- utilidades ---------- */
   const $ = (s, r) => (r || document).querySelector(s);
+  // Un enlace con esquema (https://…) o de otro origen solo vale si es https; y entonces lleva rel="noopener noreferrer".
+  const CON_ESQUEMA = /^([a-z][a-z0-9+.-]*:|\/\/)/i;
+  const enlaceSeguro = (v) => !CON_ESQUEMA.test(String(v)) || /^https:\/\/[^\s/]/i.test(String(v));
   function el(tag, attrs, ...kids) {
     const e = document.createElement(tag);
     for (const [k, v] of Object.entries(attrs || {})) {
       if (v == null || v === false) continue;
       if (k === 'class') e.className = v;
       else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+      else if (k === 'href' && !enlaceSeguro(v)) continue;
       else e.setAttribute(k, v === true ? '' : v);
     }
+    if (e.tagName === 'A' && CON_ESQUEMA.test(e.getAttribute('href') || '')) e.setAttribute('rel', 'noopener noreferrer');
     for (const k of kids.flat(Infinity)) {
       if (k == null || k === false) continue;
       e.append(k.nodeType ? k : document.createTextNode(String(k)));

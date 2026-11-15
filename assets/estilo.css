@@ -220,3 +220,11 @@ footer.pie { background: var(--barra); color: var(--barra-suave); font-size: .88
 .calendario li.curso .num small { color: inherit; }
 .folleto p { margin: 0 0 12px; }
 .visor { width: 100%; height: min(80vh, 900px); min-height: 420px; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--papel); }
+
+/* antes eran style="..." en línea; la CSP (style-src 'self') no los deja */
+.portada .barra-portada { padding-left: 0; padding-right: 0; }
+.portada .barra-portada .marca { margin-left: 16px; }
+.tit-publicar { margin: 8px 0 6px; }
+.nota.sin-margen { margin: 0; }
+.sep-12 { margin-top: 12px; }
+.sep-10 { margin-top: 10px; }

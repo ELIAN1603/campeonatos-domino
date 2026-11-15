@@ -64,6 +64,7 @@ ok('V04 id usado por otro tipo', () => assert.deepStrictEqual(cod(con(SP, () => 
 ok('V04b mismo id otro nombre', () => assert.deepStrictEqual(cod(con(SP, () => {}, { indice: { torneos: [{ id: 'sp-ejemplo', tipo: 'sp', nombre: 'OTRO' }] } }), 'V04b'), ['confirma']));
 ok('V05 celda con error', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, 'Z9', '#N/A', 'e')), 'V05'), ['bloquea']));
 ok('V05 ¿LICENCIA?', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, 'G5', '¿LICENCIA?')), 'V05'), ['bloquea']));
+ok('V19 texto de más de 300 caracteres', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, celda('lugar'), 'x'.repeat(301))), 'V19'), ['bloquea']));
 ok('V06 teléfono en la zona', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, 'J5', '6' + '12 345' + ' 678')), 'V06'), ['bloquea']));
 ok('V06 cifra en un nombre', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, 'E5', 'Nuria2')), 'V06'), ['bloquea']));
 ok('V06 teléfono en el lugar', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, celda('lugar'), 'Llamar al ' + '6' + '12' + '345' + '678')), 'V06'), ['bloquea']));

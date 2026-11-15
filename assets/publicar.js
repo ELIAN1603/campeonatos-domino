@@ -5,6 +5,14 @@
   const C = window.Contrato;
   const REPO = { dueno: 'ELIAN1603', nombre: 'campeonatos-domino', rama: 'main' };
   const CLAVE = 'tumesa.token';
+  const API = 'https://api.github.com'; // el único sitio al que viaja el token
+  // Correo noreply de la cuenta (id de /users/ELIAN1603): así los commits no enseñan el correo real.
+  const AUTOR = { name: 'Mesa de control', email: '356692983+ELIAN1603@users.noreply.github.com' };
+  // Lo único que esta página puede escribir en el repositorio.
+  const ID_OK = /^[a-z0-9][a-z0-9-]{2,59}$/;
+  const RUTA_OK = /^datos\/(indice\.json|[a-z0-9][a-z0-9-]{2,59}\/(jornada_\d{2}|actual)\.json)$/;
+  // Límites al leer el Excel (el real pesa unos 7 MB; la hoja WEB cabe en 210 filas y 53 columnas).
+  const MAX_BYTES = 25 * 1024 * 1024, MAX_FILAS = 300, MAX_COLUMNAS = 80;
   const $ = (s) => document.querySelector(s);
   const E = { token: null, json: null, raw: null, pub: null, vals: [], confirmadas: new Set() };
 
@@ -17,14 +25,22 @@
   /* ---------- GitHub ---------- */
   class ErrorGH extends Error { constructor(estado, msg) { super(msg); this.estado = estado; } }
   async function gh(ruta, opciones) {
+    if (!E.token) throw new ErrorGH(401, 'Falta el token de GitHub. Pégalo en el paso 1.');
+    const destino = API + ruta;
+    let ok = false;
+    try { ok = new URL(destino).origin === API && ruta.startsWith('/repos/' + REPO.dueno + '/' + REPO.nombre); } catch (e) { /* ok sigue en false */ }
+    if (!ok) throw new ErrorGH(0, 'Dirección no permitida: el token solo se envía a GitHub.');
     let r;
     try {
-      r = await fetch('https://api.github.com' + ruta, {
-        ...opciones, headers: { Authorization: 'Bearer ' + E.token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(opciones && opciones.headers) },
+      r = await fetch(destino, {
+        ...opciones, redirect: 'error', credentials: 'omit', referrerPolicy: 'no-referrer', headers: { Authorization: 'Bearer ' + E.token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(opciones && opciones.headers) },
       });
     } catch (e) { throw new ErrorGH(0, 'No hay conexión con GitHub. Comprueba que el ordenador tiene internet y prueba otra vez.'); }
     if (r.ok) return r.status === 204 ? null : r.json();
-    if (r.status === 401) throw new ErrorGH(401, 'GitHub no acepta el token: es incorrecto o ha caducado. Crea uno nuevo, pégalo en el paso 1 y vuelve a intentarlo.');
+    if (r.status === 401) {
+      guardado.borrar(); E.token = null;
+      throw new ErrorGH(401, 'GitHub no acepta el token: es incorrecto o ha caducado. Lo he borrado de este navegador. Crea uno nuevo, pégalo en el paso 1 y vuelve a intentarlo.');
+    }
     if (r.status === 403 || r.status === 404) throw new ErrorGH(r.status, 'Con este token no se puede escribir en el repositorio campeonatos-domino. Comprueba que el token es solo para ese repositorio y que tiene permiso de «Contents: Read and write».');
     if (r.status === 409 || r.status === 422) throw new ErrorGH(r.status, 'Alguien ha publicado a la vez y el archivo ha cambiado. Vuelve a elegir el Excel y publica otra vez.');
     throw new ErrorGH(r.status, `GitHub ha respondido con un error (${r.status}). Prueba otra vez dentro de un minuto.`);
@@ -33,13 +49,15 @@
   function deBase64(b64) { const bin = atob(b64.replace(/\s/g, '')); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new TextDecoder().decode(u); }
   function aBase64(txt) { const u = new TextEncoder().encode(txt); let bin = ''; for (let i = 0; i < u.length; i += 0x8000) bin += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(bin); }
   async function traer(ruta) {
+    if (!RUTA_OK.test(ruta)) throw new ErrorGH(0, 'Ruta no permitida: ' + ruta);
     try {
       const r = await gh(rutaApi(ruta) + '?ref=' + REPO.rama);
       return { sha: r.sha, json: JSON.parse(deBase64(r.content)) };
     } catch (e) { if (e.estado === 404) return null; throw e; }
   }
   async function escribir(ruta, texto, sha, mensaje) {
-    const cuerpo = { message: mensaje, content: aBase64(texto), branch: REPO.rama };
+    if (!RUTA_OK.test(ruta)) throw new ErrorGH(0, 'Ruta no permitida: ' + ruta + '. Solo se escribe en datos/indice.json y datos/<id>/jornada_NN.json o actual.json.');
+    const cuerpo = { message: mensaje, content: aBase64(texto), branch: REPO.rama, author: AUTOR, committer: AUTOR };
     if (sha) cuerpo.sha = sha;
     return gh(rutaApi(ruta), { method: 'PUT', body: JSON.stringify(cuerpo) });
   }
@@ -82,18 +100,21 @@
     E.json = null;
     $('#paso-revision').hidden = true; $('#paso-publicar').hidden = true;
     if (!f) { poner($('#lectura')); return; }
+    if (f.size > MAX_BYTES) { poner($('#lectura'), el('p', { class: 'nota caja' }, `Ese archivo pesa ${Math.round(f.size / 1048576)} MB y es demasiado grande (el máximo son ${MAX_BYTES / 1048576} MB). ¿Es el Excel del campeonato?`)); return; }
     if (!/\.(xlsx|xlsm)$/i.test(f.name)) { poner($('#lectura'), el('p', { class: 'nota caja' }, 'Elige el archivo Excel del campeonato (termina en .xlsx).')); return; }
     if (!guardado.leer() && !E.token) { poner($('#lectura'), el('p', { class: 'nota caja' }, 'Primero pega el token de GitHub en el paso 1.')); return; }
     poner($('#lectura'), el('p', { class: 'nota' }, 'Leyendo la hoja WEB…'));
     let wb;
     try {
-      wb = XLSX.read(await f.arrayBuffer(), { type: 'array', sheets: 'WEB' });
+      wb = XLSX.read(await f.arrayBuffer(), { type: 'array', sheets: 'WEB', cellFormula: false, cellHTML: false, cellStyles: false, cellNF: false });
     } catch (e) {
       poner($('#lectura'), el('p', { class: 'nota caja' }, 'No se ha podido leer ese archivo. ¿Está dañado o es de otro programa?'));
       return;
     }
     const ws = wb.Sheets && wb.Sheets.WEB;
     if (!ws) { poner($('#lectura'), el('p', { class: 'nota caja' }, 'Este archivo no tiene la hoja WEB. ¿Es el Excel del campeonato?')); return; }
+    const rg = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    if (rg.e.r + 1 > MAX_FILAS || rg.e.c + 1 > MAX_COLUMNAS) { poner($('#lectura'), el('p', { class: 'nota caja' }, 'La hoja WEB es mucho más grande de lo normal. ¿Es el Excel del campeonato?')); return; }
     E.archivo = f.name;
     await revisar(ws);
   }
@@ -102,7 +123,7 @@
     const id = j.torneo.id;
     const pub = { indice: null, actual: null, existente: null, sha: {} };
     const i = await traer('datos/indice.json'); if (i) { pub.indice = i.json; pub.sha.indice = i.sha; }
-    if (/^[a-z0-9][a-z0-9-]{2,59}$/.test(id || '')) {
+    if (ID_OK.test(id || '')) {
       const a = await traer(`datos/${id}/actual.json`); if (a) { pub.actual = a.json; pub.sha.actual = a.sha; }
       if (Number.isInteger(j.jornada.numero) && j.jornada.numero > 0) {
         const x = await traer(`datos/${id}/jornada_${String(j.jornada.numero).padStart(2, '0')}.json`); if (x) { pub.existente = x.json; pub.sha.jornada = x.sha; }
@@ -118,6 +139,7 @@
       poner($('#lectura'), el('p', { class: 'nota' }, 'Comprobando lo que ya está publicado…'));
       E.pub = await estadoPublicado(E.json);
     } catch (e) {
+      if (e.estado === 401) { pintarToken(e.message, true); $('#paso-revision').hidden = true; $('#paso-publicar').hidden = true; }
       poner($('#lectura'), el('p', { class: 'nota caja' }, e instanceof ErrorGH ? e.message : 'Esa hoja WEB no se puede leer. Comprueba que es la del campeonato y que el Excel está guardado.'));
       return;
     }
@@ -149,16 +171,16 @@
     const gA = j.clasificacion.filter((r) => r.grupo === 'A').slice(0, 8);
     const byId = new Map(j.participantes.map((p) => [p.id, p]));
     const sp = t.tipo === 'sp';
-    const tabla = el('div', { class: 'tabla-caja', style: 'margin-top:12px' }, el('table', { class: 'clasi' },
+    const tabla = el('div', { class: 'tabla-caja sep-12' }, el('table', { class: 'clasi' },
       el('caption', { class: 'solo-lector' }, 'Primeros puestos leídos del Excel'),
       el('thead', null, el('tr', null, el('th', null, '#'), el('th', { class: 'izq' }, 'Quién'), el('th', null, 'Gan'), el('th', null, 'Dif.T'))),
       el('tbody', null, gA.map((r) => el('tr', null, el('td', null, r.puesto), el('td', { class: 'pareja' }, el('span', { class: 'nom' }, (byId.get(r.id) || {}).corto || '#' + r.id)), el('td', { class: 'gan' }, r.gan), el('td', null, r.dt == null ? '' : r.dt))))));
-    const mesas = el('details', { style: 'margin-top:10px' }, el('summary', null, `Ver las ${j.emparejamientos.length} mesas leídas`),
+    const mesas = el('details', { class: 'sep-10' }, el('summary', null, `Ver las ${j.emparejamientos.length} mesas leídas`),
       el('ul', { class: 'vals' }, j.emparejamientos.map((m) => el('li', null,
         `${m.mesa == null ? 'Descansa' : 'Mesa ' + m.mesa}: ${m.izq.map((i) => (byId.get(i) || {}).corto || i).join(' y ')}${m.dcha.length ? ' contra ' + m.dcha.map((i) => (byId.get(i) || {}).corto || i).join(' y ') : ''}` +
         ` · ${m.estado}${m.p_izq != null ? ' · ' + (sp ? m.p_izq + '-' + m.p_dcha + ' (' + m.t_izq + '-' + m.t_dcha + ')' : m.t_izq + '-' + m.t_dcha) : ''}`))));
     poner($('#revision'), resumen, el('ul', { class: 'vals' }, lista),
-      bloquea ? null : [el('p', { class: 'nota', style: 'margin-top:12px' }, jo.completa ? 'Así leerá la web esta jornada:' : 'Clasificación provisional leída del Excel. En cuanto haya un resultado, la web la enseña en vivo, con ⏳ en quien aún no ha jugado:'), tabla, mesas]);
+      bloquea ? null : [el('p', { class: 'nota sep-12' }, jo.completa ? 'Así leerá la web esta jornada:' : 'Clasificación provisional leída del Excel. En cuanto haya un resultado, la web la enseña en vivo, con ⏳ en quien aún no ha jugado:'), tabla, mesas]);
     $('#paso-revision').hidden = false;
     $('#paso-publicar').hidden = false;
     $('#registro').hidden = true;
@@ -208,14 +230,17 @@
       }
     } catch (e) {
       anota('✖ ' + (e.message || 'Algo ha fallado.'));
+      if (e.estado === 401) { pintarToken(e.message, true); anota('Pega un token nuevo en el paso 1 y vuelve a publicar.'); boton.disabled = false; return; }
       anota('No se ha perdido nada: puedes volver a elegir el Excel y publicar otra vez.');
       boton.disabled = false;
       return;
     }
     anota('✔ Publicado. La web lo mostrará en uno o dos minutos.');
-    reg.append(el('a', { href: `torneo.html?t=${id}`, target: '_blank', rel: 'noopener' }, 'Abrir el campeonato en la web'));
+    reg.append(el('a', { href: `torneo.html?t=${encodeURIComponent(id)}`, target: '_blank', rel: 'noopener noreferrer' }, 'Abrir el campeonato en la web'));
     E.pub = await estadoPublicado(j).catch(() => E.pub);
   }
+
+  window.TuMesa.escribir = escribir; // lo usa pruebas/probar_publicar.cjs para comprobar que se rechazan las rutas fuera de datos/
 
   document.addEventListener('DOMContentLoaded', () => {
     if (document.body.dataset.pagina !== 'publicar') return;

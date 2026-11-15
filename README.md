@@ -11,6 +11,8 @@ Este repositorio es público. **Nunca entra un Excel, un teléfono ni una licenc
 | `index.html` | Portada: campeonatos en juego y terminados, y buscador de jugador |
 | `torneo.html?t=<id>` | Un campeonato: Clasificación, Mesas, Parejas y Folleto |
 | `publicar.html` | Para la mesa de control: lee la hoja WEB del Excel, valida y escribe los JSON |
+| `SECURITY.md` | Qué datos se publican, cómo, y qué hacer con el token |
+| `robots.txt` | `Disallow: /` |
 | `assets/` | Estilo, código de la web, código del contrato de datos y SheetJS (copia local, sin CDN) |
 | `datos/indice.json` | Lista de campeonatos que ve la portada. Lo escribe `publicar.html` |
 | `datos/<id>/` | `jornada_NN.json` (una foto por jornada), `actual.json` y, si lo hay, `folleto.pdf` |
@@ -48,11 +50,13 @@ python3 -m http.server 8765 &
 node pruebas/probar_contrato.cjs
 node pruebas/probar_publicar.cjs
 node pruebas/probar_web.cjs
+node pruebas/probar_seguridad.cjs
 ```
 
-- `probar_contrato.cjs` crea un `.xlsx` pequeño con la hoja WEB (con `hacer_xlsx.py`), lo lee con SheetJS y comprueba que sale el mismo JSON que los ejemplos, y que cada validación V01 a V18 salta cuando toca. El `.xlsx` queda en la carpeta temporal y se borra.
+- `probar_contrato.cjs` crea un `.xlsx` pequeño con la hoja WEB (con `hacer_xlsx.py`), lo lee con SheetJS y comprueba que sale el mismo JSON que los ejemplos, y que cada validación V01 a V19 salta cuando toca. El `.xlsx` queda en la carpeta temporal y se borra.
 - `probar_publicar.cjs` abre `publicar.html` en Chromium con una API de GitHub simulada y publica de verdad contra ella.
 - `probar_web.cjs` recorre la web a 390 px y a 1280 px: buscador, pestañas, jornadas, grupos, filtro, fechas de juego, calendario, estados raros y que nada desborde.
+- `probar_seguridad.cjs` comprueba la CSP y las demás etiquetas `<meta>` de las tres páginas, `robots.txt`, que las páginas cargan sin violaciones en consola y que los enlaces externos solo valen con https. `probar_publicar.cjs` comprueba además autor y committer de cada PUT, el rechazo de rutas fuera de `datos/` y el borrado del token ante un 401.
 - `probar_excel_real.cjs` necesita un Excel real; ver la sección siguiente.
 
 ## Prueba con el Excel real del SP

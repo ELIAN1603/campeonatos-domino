@@ -30,6 +30,7 @@
   const TIPOS = ['sp', 'parejas', 'individual'];
   const NOMBRES_PERSONA = { participantes: ['j1_nombre', 'j1_apellido1', 'j2_nombre', 'j2_apellido1', 'corto', 'zona'], sustituciones: ['sale_nombre', 'sale_apellido1', 'entra_nombre', 'entra_apellido1'] };
   const TEXTOS_LIBRES = { meta: ['nombre', 'organizador', 'lugar', 'temporada', 'criterio1', 'criterio2', 'criterio3', 'criterio4', 'criterio5'], clasificacion: ['desempate'] };
+  const MAX_TEXTO = 300; // ninguna celda de la hoja WEB necesita más
   const RE_TEL = /[6-9](?:[\s.\-]?\d){8}|\+\s?\d{2}/;
 
   const letra = (c) => { let s = ''; c++; while (c > 0) { const r = (c - 1) % 26; s = String.fromCharCode(65 + r) + s; c = Math.floor((c - 1) / 26); } return s; };
@@ -38,7 +39,7 @@
 
   /* ---------- lectura de la hoja ---------- */
   function leer(hoja) {
-    const r = { estructura: [], celdasError: [], celdas: {}, tipos: [], meta: {}, participantes: [], clasificacion: [], emparejamientos: [], sustituciones: [], version: null };
+    const r = { estructura: [], celdasError: [], largas: [], celdas: {}, tipos: [], meta: {}, participantes: [], clasificacion: [], emparejamientos: [], sustituciones: [], version: null };
     if (!hoja) return null;
     const celda = (c, f) => hoja[ref(c, f)];
     const valor = (c, f) => {
@@ -46,7 +47,7 @@
       if (!x) return null;
       if (x.t === 'e') { r.celdasError.push(ref(c, f)); return null; }
       let v = x.v;
-      if (typeof v === 'string') { v = v.trim(); if (v === '') return null; if (v === '¿LICENCIA?') r.celdasError.push(ref(c, f)); }
+      if (typeof v === 'string') { v = v.trim(); if (v === '') return null; if (v.length > MAX_TEXTO) { r.largas.push(ref(c, f)); v = v.slice(0, MAX_TEXTO); } if (v === '¿LICENCIA?') r.celdasError.push(ref(c, f)); }
       if (typeof v === 'boolean') v = v ? 1 : 0;
       return v === undefined ? null : v;
     };
@@ -152,6 +153,8 @@
     }
     // V05 errores de celda
     if (r.celdasError.length) add('V05', 'bloquea', `Hay un error en la hoja WEB, en la celda ${r.celdasError[0]}${r.celdasError.length > 1 ? ' y otras ' + (r.celdasError.length - 1) : ''}.`);
+    // V19 textos desmesurados
+    if (r.largas.length) add('V19', 'bloquea', `Hay un texto demasiado largo (más de ${MAX_TEXTO} caracteres) en la celda ${r.largas[0]}.`);
     // V06 datos personales y números
     const malos = [];
     for (const [nom, campos] of Object.entries(NOMBRES_PERSONA)) {
