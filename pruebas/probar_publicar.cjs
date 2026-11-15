@@ -130,8 +130,11 @@ exec(open(r'${path.join(__dirname, 'hacer_xlsx.py')}',encoding='utf-8').read())`
   await pg.check('.vals li.confirma input');
   assert.strictEqual(await pg.isDisabled('#publicar'), false);
   await pg.click('#publicar'); await pg.waitForSelector('text=solo se ha corregido');
-  assert.deepStrictEqual(puts.map((p) => p.ruta), ['datos/sp-ejemplo/jornada_02.json']);
-  bien('V09: jornada anterior pide casilla y escribe solo jornada_02.json');
+  assert.deepStrictEqual(puts.map((p) => p.ruta), ['datos/sp-ejemplo/jornada_02.json', 'datos/sp-ejemplo/actual.json']);
+  const act2 = JSON.parse(repo.get('datos/sp-ejemplo/actual.json').texto);
+  assert.deepStrictEqual(act2.jornadas.map((x) => [x.numero, x.completa]), [[2, true], [3, false]]); // si no, la web no enseña la J2
+  assert.deepStrictEqual(sinPub({ ...act2, jornadas: null }), sinPub({ ...act, jornadas: null })); // el resto de actual.json no cambia
+  bien('V09: jornada anterior pide casilla, escribe jornada_02.json y la apunta en la lista de actual.json');
 
   assert.deepStrictEqual(errores, []);
   bien('sin errores de JavaScript en la página');
