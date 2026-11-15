@@ -216,7 +216,7 @@
      ===================================================================== */
   const PESTANAS = [['clasificacion', 'Clasificación'], ['mesas', 'Mesas'], ['parejas', 'Parejas'], ['folleto', 'Calendario']];
   const ANTIGUAS = { emparejamientos: 'mesas', resultados: 'mesas', normativa: 'folleto' }; // enlaces de antes del cambio de pestañas
-  const E = { id: null, actual: null, cache: new Map(), ver: 'clasificacion', j: null, g: 'A', p: null, q: '' };
+  const E = { id: null, actual: null, cache: new Map(), ver: 'clasificacion', j: null, g: 'A', p: null, q: '', cal: 'lista' };
 
   function leerUrl() {
     const x = new URLSearchParams(location.search);
@@ -226,10 +226,11 @@
     E.j = +x.get('j') || null;
     E.g = x.get('g') === 'B' ? 'B' : 'A';
     E.p = +x.get('p') || null;
+    E.cal = x.get('cal') === 'linea' ? 'linea' : 'lista';
   }
   function irA(cambios, empujar) {
     Object.assign(E, cambios);
-    const nueva = url('torneo.html', { t: E.id, ver: E.ver === 'clasificacion' ? '' : E.ver, j: E.j, g: E.g === 'B' ? 'B' : '', p: E.p });
+    const nueva = url('torneo.html', { t: E.id, ver: E.ver === 'clasificacion' ? '' : E.ver, j: E.j, g: E.g === 'B' ? 'B' : '', p: E.p, cal: E.ver === 'folleto' ? E.cal : '' });
     if (empujar) history.pushState(null, '', nueva); else history.replaceState(null, '', nueva);
     pintar();
   }
@@ -439,19 +440,98 @@
         el('td', { class: 'zona' }, p.zona)))))));
   }
 
-  /* ----- calendario ----- */
-  function calendario(a) {
-    const filas = (Array.isArray(a.calendario) ? a.calendario : []).filter((c) => c && Number.isInteger(c.jornada) && corta(c.desde) && corta(c.hasta));
-    if (!filas.length) return null;
-    const tp = tipoDe(a.torneo.tipo), curso = a.torneo.estado === 'terminado' ? null : a.jornada.numero;
+  /* ----- calendario: dos vistas (Lista y Línea de tiempo) ----- */
+  const CALS = [['lista', 'Lista'], ['linea', 'Línea de tiempo']];
+  const diaN = (iso) => { const f = partesFecha(iso); return Date.UTC(f.a, f.m - 1, f.d) / 864e5; };
+  const dm = (iso) => { const f = partesFecha(iso); return `${f.d}/${f.m}`; };
+  const dma = (iso) => `${dm(iso)}/${partesFecha(iso).a}`;
+  // "13/10 – 26/10/2026"; si cruza de año, "15/12/2026 – 4/1/2027"
+  const rango = (c) => (partesFecha(c.desde).a === partesFecha(c.hasta).a ? `${dm(c.desde)} – ${dma(c.hasta)}` : `${dma(c.desde)} – ${dma(c.hasta)}`);
+  // "del 10 al 23 de noviembre de 2026" (para lectores de pantalla)
+  function rangoLargo(c) {
+    const d = partesFecha(c.desde), h = partesFecha(c.hasta);
+    if (d.a !== h.a) return `del ${fechaLarga(c.desde)} al ${fechaLarga(c.hasta)}`;
+    if (d.m !== h.m) return `del ${d.d} de ${MESES[d.m - 1]} al ${h.d} de ${MESES[h.m - 1]} de ${h.a}`;
+    return `del ${d.d} al ${h.d} de ${MESES[h.m - 1]} de ${h.a}`;
+  }
+  function filasCalendario(a) {
+    return (Array.isArray(a.calendario) ? a.calendario : [])
+      .filter((c) => c && Number.isInteger(c.jornada) && partesFecha(c.desde) && partesFecha(c.hasta) && diaN(c.hasta) >= diaN(c.desde))
+      .sort((x, y) => diaN(x.desde) - diaN(y.desde));
+  }
+  const cursoDe = (a) => (a.torneo.estado === 'terminado' ? null : a.jornada.numero);
+  const estadoDe = (c, curso) => (curso == null || c.jornada < curso ? 'jugada' : c.jornada === curso ? 'en juego' : 'por jugar');
+
+  function calLista(a, filas) {
+    const tp = tipoDe(a.torneo.tipo), curso = cursoDe(a);
     return el('section', { class: 'calendario' }, el('h2', null, 'Calendario'),
       el('ol', null, filas.map((c) => el('li', { class: c.jornada === curso ? 'curso' : null, 'aria-current': c.jornada === curso ? 'step' : null },
         el('span', { class: 'num' }, el('small', null, tp.jornada), c.jornada, c.jornada_b != null ? el('b', { class: 'b' }, 'B' + c.jornada_b) : null),
-        el('span', { class: 'fechas' }, `${corta(c.desde)} – ${corta(c.hasta)}`)))));
+        el('span', { class: 'fechas' }, rango(c))))));
   }
-  // La normativa en PDF la reparte el árbitro por su cuenta (decisión del 15/11/2026): aquí solo el calendario.
+
+  // Regla vertical de semanas: la altura de cada jornada sale de sus días (--dias; la CSP permite setProperty).
+  function calLinea(a, filas) {
+    const tp = tipoDe(a.torneo.tipo), curso = cursoDe(a);
+    const dias = filas.map((c) => diaN(c.hasta) - diaN(c.desde) + 1);
+    const n = new Date(), hoy = Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) / 864e5;
+    const conB = filas.some((c) => c.jornada_b != null);
+    const sobre = filas.map(() => ({ arriba: [], abajo: [], cortes: [], hoy: null }));
+    const hito = (i, pos, txt, iso) => sobre[i][pos].push(el('p', { class: 'hito', tabindex: '0', role: 'group', 'aria-label': `${txt}: ${fechaLarga(iso)}` },
+      el('b', { 'aria-hidden': 'true' }, txt), el('span', { 'aria-hidden': 'true' }, dma(iso))));
+    const ult = filas.length - 1;
+    hito(0, 'arriba', 'Inicio del campeonato', filas[0].desde);
+    const kb = filas.findIndex((c) => c.jornada_b != null);
+    if (kb > 0) { hito(kb - 1, 'abajo', 'Corte del grupo B', filas[kb - 1].hasta); hito(kb, 'arriba', 'Inicio del grupo B', filas[kb].desde); }
+    hito(ult, 'abajo', 'Final del campeonato', filas[ult].hasta);
+    // cambio de año: una línea que cruza la regla, con el año a cada lado
+    for (let y = partesFecha(filas[0].desde).a + 1; y <= partesFecha(filas[ult].hasta).a; y++) {
+      const ene = Date.UTC(y, 0, 1) / 864e5;
+      let i = filas.findIndex((c) => diaN(c.desde) <= ene && ene <= diaN(c.hasta));
+      let f = i < 0 ? 0 : (ene - diaN(filas[i].desde)) / dias[i];
+      if (i < 0) i = filas.findIndex((c) => diaN(c.desde) > ene);
+      if (i < 0) continue;
+      const corte = el('div', { class: 'corte' },
+        el('span', { class: 'anio antes' }, y - 1),
+        el('b', { class: 'anio despues', tabindex: '0', role: 'group', 'aria-label': `Cambio de año: ${fechaLarga(`${y}-01-01`)}` },
+          el('span', { 'aria-hidden': 'true' }, y), el('small', { 'aria-hidden': 'true' }, 'Cambio de año · 1/1')));
+      corte.style.setProperty('--f', f);
+      sobre[i].cortes.push(corte);
+    }
+    // «hoy», dentro del campeonato
+    if (hoy >= diaN(filas[0].desde) && hoy <= diaN(filas[ult].hasta)) {
+      let i = filas.findIndex((c) => hoy <= diaN(c.hasta));
+      const f = hoy >= diaN(filas[i].desde) ? (hoy - diaN(filas[i].desde) + 0.5) / dias[i] : 0;
+      const m = el('div', { class: 'hoy' }, el('b', { 'aria-hidden': 'true' }, 'hoy'), el('span', { class: 'solo-lector' }, `Hoy, ${fechaLarga(`${n.getFullYear()}-${pad(n.getMonth() + 1)}-${pad(n.getDate())}`)}`));
+      m.style.setProperty('--f', f);
+      sobre[i].hoy = m;
+    }
+    const lis = filas.map((c, i) => {
+      const est = estadoDe(c, curso), cl = est === 'jugada' ? 'jugada' : est === 'en juego' ? 'curso' : 'falta';
+      const li = el('li', { class: cl, 'aria-current': cl === 'curso' ? 'step' : null },
+        el('div', { class: 'hitos' }, sobre[i].arriba, sobre[i].abajo),
+        el('span', { class: 'regla', 'aria-hidden': 'true' }),
+        el('div', { class: 'jornada', tabindex: '0', role: 'group', 'aria-label': `${tp.jornada} ${c.jornada}, ${rangoLargo(c)}, ${est}${c.jornada_b != null ? `, jornada ${c.jornada_b} del grupo B` : ''}` },
+          el('b', { class: 'num', 'aria-hidden': 'true' }, el('small', null, tp.jornada), c.jornada),
+          el('span', { class: 'fechas', 'aria-hidden': 'true' }, `${dm(c.desde)} – ${dm(c.hasta)}`),
+          el('span', { class: 'estado', 'aria-hidden': 'true' }, est)),
+        c.jornada_b != null ? el('span', { class: 'carril-b', 'aria-hidden': 'true' }, 'B' + c.jornada_b) : null,
+        sobre[i].cortes, sobre[i].hoy);
+      li.style.setProperty('--dias', dias[i]);
+      return li;
+    });
+    return el('section', { class: 'linea-tiempo' }, el('h2', null, 'Calendario'),
+      el('ol', { class: conB ? 'con-b' : null }, lis));
+  }
+
   function pintarFolleto(cont) {
-    poner(cont, calendario(E.actual) || el('p', { class: 'vacio' }, 'Este campeonato no tiene calendario publicado.'));
+    const filas = filasCalendario(E.actual);
+    const sub = el('nav', { class: 'subpestanas', 'aria-label': 'Vista del calendario' }, CALS.map(([k, txt]) => el('a', {
+      href: url('torneo.html', { t: E.id, ver: 'folleto', cal: k, p: E.p }), 'aria-current': E.cal === k ? 'page' : null,
+      onclick: (ev) => { if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return; ev.preventDefault(); E.enfocar = true; irA({ cal: k }, true); },
+    }, txt)));
+    poner(cont, sub, !filas.length ? el('p', { class: 'vacio' }, 'Este campeonato no tiene calendario publicado.') : E.cal === 'linea' ? calLinea(E.actual, filas) : calLista(E.actual, filas));
+    if (E.enfocar) { E.enfocar = false; const x = $('.subpestanas a[aria-current]', cont); if (x) x.focus(); }
   }
 
   /* ----- orquestación ----- */

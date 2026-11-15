@@ -218,6 +218,48 @@ footer.pie { background: var(--barra); color: var(--barra-suave); font-size: .88
 .calendario li.curso { background: var(--marca); color: var(--marca-texto); border-color: var(--marca); }
 .calendario li.curso .num { border-bottom-color: currentColor; }
 .calendario li.curso .num small { color: inherit; }
+
+/* calendario: sub-pestañas y línea de tiempo */
+.subpestanas { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.subpestanas a { padding: 7px 14px; font-size: .92rem; font-weight: 700; text-decoration: none; border: 1.5px solid var(--tinta); border-radius: 999px; }
+.subpestanas a[aria-current="page"] { background: var(--tinta); color: var(--fondo); }
+.linea-tiempo h2 { font-size: 1.05rem; margin: 0 0 12px; }
+.linea-tiempo ol { --dia: 7px; --c-hito: 7.6rem; --c-regla: 2.6rem; --c-b: 2.3rem; list-style: none; margin: 0 auto; padding: 0; max-width: 34rem; }
+.linea-tiempo li { position: relative; display: grid; grid-template-columns: var(--c-hito) var(--c-regla) minmax(0, 1fr); height: calc(var(--dias) * var(--dia)); }
+.linea-tiempo .con-b li { grid-template-columns: var(--c-hito) var(--c-regla) minmax(0, 1fr) var(--c-b); column-gap: 0; }
+.linea-tiempo .hitos { grid-column: 1; grid-row: 1; display: grid; padding-right: 8px; text-align: right; min-width: 0; }
+.linea-tiempo .hito { margin: 0; font-size: .78rem; line-height: 1.2; display: flex; flex-direction: column; grid-area: 1 / 1; min-width: 0; z-index: 1; }
+.linea-tiempo .hito b { font-size: .8rem; }
+.linea-tiempo .hito span { color: var(--tinta2); font-variant-numeric: tabular-nums; }
+.linea-tiempo .hitos > .hito:first-child { align-self: start; }
+.linea-tiempo .hitos > .hito:last-child { align-self: end; }
+.linea-tiempo .hitos > .hito:only-child { align-self: start; }
+.linea-tiempo .regla { grid-column: 2; grid-row: 1; position: relative; border-top: 2px solid var(--tinta); }
+.linea-tiempo li:last-child .regla { border-bottom: 2px solid var(--tinta); }
+.linea-tiempo .regla::before { content: ""; position: absolute; top: 0; bottom: 0; left: calc(50% - 1px); width: 2px; background: var(--tinta); }
+.linea-tiempo .regla::after { content: ""; position: absolute; top: 0; bottom: 0; left: 30%; right: 30%; background: repeating-linear-gradient(to bottom, var(--tinta) 0 1.5px, transparent 1.5px calc(var(--dia) * 7)); }
+.linea-tiempo .jornada, .linea-tiempo .carril-b { margin: 3px 0 3px 0; border: 1.5px solid var(--tinta); border-radius: 8px; padding: 5px 9px; min-width: 0; overflow: hidden; }
+.linea-tiempo .jornada { grid-column: 3; grid-row: 1; display: flex; flex-direction: column; justify-content: center; margin-left: 4px; }
+.linea-tiempo .carril-b { grid-column: 4; grid-row: 1; margin-left: 6px; padding: 5px 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .85rem; }
+.linea-tiempo .num { font-size: 1.15rem; line-height: 1.15; display: flex; align-items: baseline; gap: 6px; }
+.linea-tiempo .num small { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; }
+.linea-tiempo .fechas { font-size: .88rem; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.linea-tiempo .estado { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; margin-top: 2px; }
+.linea-tiempo li.jugada .jornada, .linea-tiempo li.jugada .carril-b { background: var(--linea); border-color: var(--linea); color: var(--tinta2); }
+.linea-tiempo li.curso .jornada, .linea-tiempo li.curso .carril-b { background: var(--marca); border-color: var(--marca); color: var(--marca-texto); }
+.linea-tiempo li.falta .jornada, .linea-tiempo li.falta .carril-b { background: transparent; }
+.linea-tiempo .corte { position: absolute; left: 0; width: calc(var(--c-hito) + var(--c-regla)); top: calc(var(--f) * 100%); border-top: 2px solid var(--marca); z-index: 2; pointer-events: none; }
+.linea-tiempo .anio { position: absolute; width: var(--c-hito); padding-right: 8px; text-align: right; font-weight: 800; line-height: 1.1; }
+.linea-tiempo .anio.antes { bottom: 3px; font-size: .8rem; color: var(--tinta2); }
+.linea-tiempo .anio.despues { top: 3px; font-size: 1.05rem; color: var(--marca); pointer-events: auto; }
+.linea-tiempo .anio small { display: block; font-size: .7rem; font-weight: 600; color: var(--tinta2); }
+.linea-tiempo .hoy { position: absolute; left: var(--c-hito); right: 0; top: calc(var(--f) * 100%); border-top: 2px dashed var(--tinta); z-index: 3; pointer-events: none; }
+.linea-tiempo .hoy b { position: absolute; left: 0; width: var(--c-regla); top: -.8rem; height: 1.6rem; display: flex; align-items: center; justify-content: center; background: var(--tinta); color: var(--fondo); border-radius: 999px; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+@media (min-width: 700px) {
+  .linea-tiempo ol { --dia: 8px; --c-hito: 10rem; --c-regla: 3rem; --c-b: 3rem; }
+  .linea-tiempo .hito, .linea-tiempo .hito b { font-size: .9rem; }
+  .linea-tiempo .fechas { font-size: .95rem; }
+}
 .folleto p { margin: 0 0 12px; }
 .visor { width: 100%; height: min(80vh, 900px); min-height: 420px; border: 1px solid var(--linea); border-radius: var(--radio); background: var(--papel); }
 
