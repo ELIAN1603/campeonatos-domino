@@ -158,7 +158,7 @@
         `${m.mesa == null ? 'Descansa' : 'Mesa ' + m.mesa}: ${m.izq.map((i) => (byId.get(i) || {}).corto || i).join(' y ')}${m.dcha.length ? ' contra ' + m.dcha.map((i) => (byId.get(i) || {}).corto || i).join(' y ') : ''}` +
         ` · ${m.estado}${m.p_izq != null ? ' · ' + (sp ? m.p_izq + '-' + m.p_dcha + ' (' + m.t_izq + '-' + m.t_dcha + ')' : m.t_izq + '-' + m.t_dcha) : ''}`))));
     poner($('#revision'), resumen, el('ul', { class: 'vals' }, lista),
-      bloquea ? null : [el('p', { class: 'nota', style: 'margin-top:12px' }, jo.completa ? 'Así leerá la web esta jornada:' : 'Clasificación provisional leída del Excel. La web seguirá enseñando la de la última jornada cerrada hasta que esta se complete:'), tabla, mesas]);
+      bloquea ? null : [el('p', { class: 'nota', style: 'margin-top:12px' }, jo.completa ? 'Así leerá la web esta jornada:' : 'Clasificación provisional leída del Excel. En cuanto haya un resultado, la web la enseña en vivo, con ⏳ en quien aún no ha jugado:'), tabla, mesas]);
     $('#paso-revision').hidden = false;
     $('#paso-publicar').hidden = false;
     $('#registro').hidden = true;

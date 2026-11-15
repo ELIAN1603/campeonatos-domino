@@ -209,8 +209,8 @@
   /* =====================================================================
      PÁGINA DE TORNEO
      ===================================================================== */
-  const PESTANAS = [['clasificacion', 'Clasificación'], ['mesas', 'Mesas'], ['resultados', 'Resultados'], ['parejas', 'Parejas'], ['folleto', 'Folleto']];
-  const ANTIGUAS = { emparejamientos: 'mesas', normativa: 'folleto' }; // enlaces de antes del cambio de pestañas
+  const PESTANAS = [['clasificacion', 'Clasificación'], ['mesas', 'Mesas'], ['parejas', 'Parejas'], ['folleto', 'Folleto']];
+  const ANTIGUAS = { emparejamientos: 'mesas', resultados: 'mesas', normativa: 'folleto' }; // enlaces de antes del cambio de pestañas
   const E = { id: null, actual: null, cache: new Map(), ver: 'clasificacion', j: null, g: 'A', p: null, q: '' };
 
   function leerUrl() {
@@ -335,45 +335,44 @@
     if (f && !E.yaDesplazado) { E.yaDesplazado = true; f.scrollIntoView({ block: 'center' }); }
   }
 
-  /* ----- mesas ----- */
+  /* ----- mesas: una tarjeta por mesa, con resultado ----- */
+  const ETIQUETAS = { incomparecencia: 'Incomparecencia', nd: 'ND', descanso: 'Descansa', retirada: 'Retirada', ausencia: 'Falta alguien', no_cuenta: 'No cuenta' };
+  const TITULOS = { nd: 'No disputado', incomparecencia: 'Una pareja no se presentó', retirada: 'La pareja rival se ha retirado', descanso: 'Sin rival esta jornada', ausencia: 'Falta algún jugador en la mesa', no_cuenta: 'Esta mesa no cuenta' };
+
   function ladoEl(ids, byId, gana) {
     return el('div', { class: 'lado' + (gana ? ' gana' : '') }, ids.map((id) => {
       const p = byId.get(id);
-      return el('div', null, el('span', { class: 'n' }, id), el('span', { class: 'nom' }, p ? p.corto : '?'),
-        p && p.ret ? el('span', { class: 'etq alerta' }, 'Retirada') : null,
-        p && p.j2_nombre ? el('small', null, nombreLargo(p)) : null);
+      return el('div', { class: 'pa' }, el('span', { class: 'n' }, id),
+        el('span', { class: 'quien' }, el('span', { class: 'nom' }, p ? p.corto : '?'),
+          p && p.ret ? el('span', { class: 'etq alerta' }, 'Retirada') : null,
+          p && p.j2_nombre ? el('small', null, nombreLargo(p)) : null),
+        gana ? el('span', { class: 'gana-marca', title: 'Ganadora' }, '✓', el('span', { class: 'solo-lector' }, ' ganadora')) : null);
     }));
   }
   function qBusqueda(m, byId) {
     const ids = [...m.izq, ...m.dcha];
     return norm(ids.map((i) => { const p = byId.get(i); return i + ' ' + (p ? nombreLargo(p) + ' ' + p.corto : ''); }).join(' ') + ' mesa ' + (m.mesa || ''));
   }
-  function resultado(m, tp, sp, meta) {
-    const tiene = m.p_izq != null;
-    const marc = tiene ? (sp ? `${m.p_izq}-${m.p_dcha}` : `${m.t_izq}-${m.t_dcha}`) : '';
-    const tant = tiene && sp ? `${m.t_izq}-${m.t_dcha} tantos` : '';
-    switch (m.estado) {
-      case 'pendiente': return el('div', { class: 'res' }, el('span', { class: 'por' }, '⏳ por jugar'));
-      case 'jugada': return el('div', { class: 'res' }, el('b', null, marc), tant && el('small', null, tant));
-      case 'incomparecencia': return el('div', { class: 'res' }, el('b', null, marc), el('small', null, 'incomparecencia'));
-      case 'retirada': return el('div', { class: 'res' }, el('b', null, marc), el('small', null, 'rival retirado'));
-      case 'descanso': return el('div', { class: 'res' }, el('b', null, marc), el('small', null, 'descanso'));
-      case 'nd': return el('div', { class: 'res' }, el('b', null, 'ND'), el('small', null, 'no disputado'));
-      case 'ausencia': return el('div', { class: 'res' }, el('small', null, 'falta alguien en la mesa'));
-      case 'no_cuenta': return el('div', { class: 'res' }, el('small', null, 'no cuenta'));
-      default: return el('div', { class: 'res' }, el('small', null, m.estado));
+  // Resultado: partidas (2-1) y tantos (600-472) en el SP; solo tantos en los demás. Un estado raro lleva su etiqueta en lugar de cifras.
+  function resultado(m, sp) {
+    if (m.estado === 'pendiente') return el('div', { class: 'res' }, el('span', { class: 'por', title: 'Por jugar' }, '⏳'), el('small', null, 'por jugar'));
+    if (m.estado === 'jugada' && m.p_izq != null) {
+      return el('div', { class: 'res' }, el('b', null, sp ? `${m.p_izq}-${m.p_dcha}` : `${m.t_izq}-${m.t_dcha}`), sp ? el('small', null, `${m.t_izq}-${m.t_dcha} tantos`) : null);
     }
+    return el('div', { class: 'res' }, el('span', { class: 'etiq-estado ' + m.estado, title: TITULOS[m.estado] || null }, ETIQUETAS[m.estado] || m.estado));
   }
-  function filaMesa(m, byId, a, modo) {
-    const sp = a.torneo.tipo === 'sp', tp = tipoDe(a.torneo.tipo);
-    const gIzq = m.p_izq != null && m.p_izq > m.p_dcha, gDcha = m.p_izq != null && m.p_dcha > m.p_izq;
+  function tarjetaMesa(m, byId, a) {
+    const sp = a.torneo.tipo === 'sp';
+    const jugada = m.estado === 'jugada' && m.p_izq != null;
+    const gIzq = jugada && (sp ? m.p_izq > m.p_dcha : m.t_izq > m.t_dcha), gDcha = jugada && (sp ? m.p_dcha > m.p_izq : m.t_dcha > m.t_izq);
     const mia = E.p && [...m.izq, ...m.dcha].includes(E.p);
     const desc = m.estado === 'descanso';
     const aus = m.estado === 'ausencia' && m.ausentes.length ? el('small', { class: 'sub' }, 'Falta: ' + m.ausentes.map((i) => (byId.get(i) || {}).corto || i).join(', ')) : null;
-    return el('li', { class: 'mesa' + (mia ? ' resalte' : ''), 'data-q': qBusqueda(m, byId), id: mia ? 'mesa-mia' : null },
-      desc ? el('div', { class: 'ficha-mesa sin' }, el('b', null, 'descansa')) : el('div', { class: 'ficha-mesa' }, el('i', null, 'mesa'), el('b', null, m.mesa)),
-      el('div', { class: 'lados' }, ladoEl(m.izq, byId, gIzq), desc ? null : el('div', { class: 'contra' }, 'contra'), desc ? null : ladoEl(m.dcha, byId, gDcha), aus),
-      modo === 'emp' ? el('div', { class: 'res' }, m.estado === 'pendiente' ? el('span', { class: 'por' }, 'por jugar') : desc ? el('span', { class: 'por' }, 'descansa') : el('span', { class: 'hecho' }, '✓ jugada')) : resultado(m, tp, sp));
+    return el('li', { class: 'mesa' + (mia ? ' resalte' : '') + (desc ? ' descanso' : ''), 'data-q': qBusqueda(m, byId), id: mia ? 'mesa-mia' : null },
+      el('div', { class: 'cab-mesa' },
+        desc ? el('span', { class: 'num-mesa sin' }, 'Descanso') : el('span', { class: 'num-mesa' }, el('i', null, 'Mesa'), el('b', null, m.mesa)),
+        resultado(m, sp)),
+      el('div', { class: 'lados' }, ladoEl(m.izq, byId, gIzq), desc ? null : ladoEl(m.dcha, byId, gDcha), aus));
   }
   function aplicarFiltro() {
     const q = norm(E.q), cont = $('#contenido');
@@ -393,47 +392,31 @@
     return el('div', { class: 'filtro' }, campo);
   }
 
-  async function pintarMesas(cont, modo) {
+  async function pintarMesas(cont) {
     const a = E.actual, tp = tipoDe(a.torneo.tipo);
     const lista = jornadasDe(a);
     const n = lista.some((j) => j.numero === E.j) ? E.j : a.jornada.numero;
     let jd;
     try { jd = await datosJornada(n); } catch (e) { cont.replaceChildren(el('p', { class: 'aviso alerta' }, 'No se ha podido cargar esa ' + tp.jornada.toLowerCase() + '. Prueba otra vez dentro de un minuto.')); return; }
-    if (E.ver !== modo_ver(modo)) return;
+    if (E.ver !== 'mesas') return;
     const byId = new Map(jd.participantes.map((p) => [p.id, p]));
     const ms = jd.emparejamientos;
     const grupos = [...new Set(ms.map((m) => m.grupo))];
-    const bloques = [];
-    const secciones = (filtroFn, vacio) => {
-      const out = [];
-      for (const g of grupos) {
-        const del = ms.filter((m) => m.grupo === g && filtroFn(m));
-        if (!del.length) continue;
-        if (grupos.length > 1) out.push(el('h2', { class: 'grupo-tit' }, 'Grupo ' + g));
-        out.push(el('ul', { class: 'mesas' }, del.map((m) => filaMesa(m, byId, a, modo))));
-      }
-      return out.length ? out : [el('p', { class: 'vacio' }, vacio)];
-    };
     const pend = ms.filter((m) => m.estado === 'pendiente').length;
-    const cabecera = [selectorJornada(lista, n, tp, (x) => irA({ j: x }, false)), modo === 'emp' ? plazo(jd, tp) : null, filtro()];
-    if (modo === 'emp') {
-      if (jd.jornada.sorteo && jd.jornada.sin_sortear) bloques.push(el('p', { class: 'nota caja' }, 'El sorteo todavía no se ha hecho: este orden es provisional.'));
-      else if (jd.jornada.emparejamiento === 'provisional' && !jd.jornada.completa) bloques.push(el('p', { class: 'nota caja' }, 'Estos emparejamientos todavía no están fijados y pueden cambiar.'));
-      bloques.push(...secciones(() => true, 'Todavía no hay emparejamientos publicados.'));
-    } else {
-      const hechas = ms.filter((m) => m.estado !== 'pendiente' && m.estado !== 'descanso').length;
-      bloques.push(el('p', { class: 'nota' }, pend ? `Hay ${hechas} ${hechas === 1 ? 'mesa con resultado' : 'mesas con resultado'} y faltan ${pend}. Los resultados salen según llegan y la clasificación se actualiza con cada uno (⏳ = aún no ha jugado).` : 'Todas las mesas tienen resultado.'));
-      bloques.push(...secciones((m) => m.estado !== 'pendiente', 'Todavía no hay ningún resultado en esta ' + tp.jornada.toLowerCase() + '.'));
-      if (pend) {
-        bloques.push(el('h2', { class: 'grupo-tit' }, 'Por jugar'));
-        bloques.push(el('ul', { class: 'mesas' }, ms.filter((m) => m.estado === 'pendiente').map((m) => filaMesa(m, byId, a, 'emp'))));
-      }
-    }
-    poner(cont, ...cabecera, ...bloques, el('p', { id: 'sin-coincidencias', class: 'vacio', hidden: true }, 'Nadie coincide con esa búsqueda en esta ' + tp.jornada.toLowerCase() + '.'));
+    const hechas = ms.filter((m) => m.estado !== 'pendiente' && m.estado !== 'descanso').length;
+    const avisos = [];
+    if (jd.jornada.sorteo && jd.jornada.sin_sortear) avisos.push('El sorteo todavía no se ha hecho: este orden es provisional.');
+    else if (jd.jornada.emparejamiento === 'provisional' && !jd.jornada.completa) avisos.push('Estos emparejamientos todavía no están fijados y pueden cambiar.');
+    if (!jd.jornada.completa && pend) avisos.push(`${hechas ? (hechas === 1 ? 'Hay 1 mesa con resultado' : `Hay ${hechas} mesas con resultado`) : 'Todavía no hay resultados'} y faltan ${pend}. ⏳ = por jugar.`);
+    const secciones = ms.length ? grupos.flatMap((g) => [
+      grupos.length > 1 ? el('h2', { class: 'grupo-tit' }, 'Grupo ' + g) : null,
+      el('ul', { class: 'mesas' }, ms.filter((m) => m.grupo === g).map((m) => tarjetaMesa(m, byId, a)))]) : [el('p', { class: 'vacio' }, 'Todavía no hay emparejamientos publicados.')];
+    poner(cont, selectorJornada(lista, n, tp, (x) => irA({ j: x }, false)), plazo(jd, tp), filtro(),
+      avisos.map((t) => el('p', { class: 'nota caja' }, t)), secciones,
+      el('p', { id: 'sin-coincidencias', class: 'vacio', hidden: true }, 'Nadie coincide con esa búsqueda en esta ' + tp.jornada.toLowerCase() + '.'));
     aplicarFiltro();
     const m = !E.yaDesplazado && $('#mesa-mia'); if (m) { E.yaDesplazado = true; m.scrollIntoView({ block: 'center' }); }
   }
-  const modo_ver = (m) => (m === 'emp' ? 'mesas' : 'resultados');
 
   /* ----- parejas ----- */
   function pintarParejas(cont) {
@@ -489,8 +472,7 @@
     const cont = $('#contenido');
     if (marca !== pintando) return;
     if (E.ver === 'clasificacion') await pintarClasificacion(cont);
-    else if (E.ver === 'mesas') await pintarMesas(cont, 'emp');
-    else if (E.ver === 'resultados') await pintarMesas(cont, 'res');
+    else if (E.ver === 'mesas') await pintarMesas(cont);
     else if (E.ver === 'parejas') pintarParejas(cont);
     else await pintarFolleto(cont);
   }
