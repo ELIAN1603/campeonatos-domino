@@ -1,8 +1,9 @@
-// Cabeceras <meta> (CSP, referrer, robots), robots.txt y que las páginas cargan sin violar la CSP.
+// Cabeceras <meta> (CSP, referrer, robots, googlebot), robots.txt y que las páginas cargan sin violar la CSP.
 // Uso: node pruebas/probar_seguridad.cjs [url-base, por defecto http://localhost:8765]
 const assert = require('assert');
 const fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
+const { recordarPrueba } = require('./cripto_prueba.cjs');
 const base = process.argv[2] || 'http://localhost:8765';
 const raiz = path.join(__dirname, '..');
 const PAGINAS = ['index.html', 'torneo.html', 'publicar.html'];
@@ -17,14 +18,15 @@ let ok = 0; const bien = (t) => { ok++; console.log('  ok  ' + t); };
     meta('http-equiv="Content-Security-Policy"', CSP.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     meta('name="referrer"', 'no-referrer');
     meta('name="robots"', 'noindex, nofollow');
+    meta('name="googlebot"', 'noarchive, nosnippet');
     assert(!/frame-ancestors/.test(h), f + ': frame-ancestors no funciona en <meta>');
     assert(!/<style|\sstyle\s*=/i.test(h), f + ': estilo en línea');
     assert(!/<script(?![^>]*\ssrc=)/i.test(h), f + ': script en línea');
     assert(!/\son[a-z]+\s*=/i.test(h), f + ': atributo on*');
     assert(!/(src|href)="(?!https:\/\/)[a-z][a-z0-9+.-]*:(?!image)/i.test(h.replace(/href="data:image[^"]*"/g, '')), f + ': enlace con esquema raro');
   }
-  bien('las 3 páginas: CSP exacta, referrer, robots noindex/nofollow, sin estilos/scripts/on* en línea ni frame-ancestors');
-  for (const f of ['assets/web.js', 'assets/publicar.js', 'assets/contrato.js', 'assets/mesa.js']) {
+  bien('las 3 páginas: CSP exacta, referrer, robots noindex/nofollow, googlebot noarchive/nosnippet, sin estilos/scripts/on* en línea ni frame-ancestors');
+  for (const f of ['assets/web.js', 'assets/publicar.js', 'assets/contrato.js', 'assets/mesa.js', 'assets/cifra.js', 'assets/palabras.js']) {
     const s = fs.readFileSync(path.join(raiz, f), 'utf8');
     assert(!/innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function/.test(s), f + ': HTML o código dinámico');
     assert(!/setAttribute\(\s*['"]style|style:\s*['"]/.test(s), f + ': estilo en línea desde JS');
@@ -34,10 +36,16 @@ let ok = 0; const bien = (t) => { ok++; console.log('  ok  ' + t); };
   for (const f of fs.readdirSync(path.join(raiz, 'assets')).filter((x) => x.endsWith('.js') && !x.startsWith('xlsx'))) {
     const s = fs.readFileSync(path.join(raiz, 'assets', f), 'utf8');
     if (f !== 'mesa.js') {
-      assert(!/Authorization|api\.github\.com|localStorage|tumesa\.token/.test(s), f + ': toca el token o la API de GitHub fuera de mesa.js');
+      assert(!/Authorization|api\.github\.com|tumesa\.token/.test(s), f + ': toca el token o la API de GitHub fuera de mesa.js');
+      if (f !== 'cifra.js') assert(!/localStorage|sessionStorage/.test(s), f + ': guarda algo en el navegador fuera de mesa.js (token) y cifra.js (clave)');
       if (f !== 'web.js') assert(!/\bfetch\(/.test(s), f + ': usa fetch');
     }
   }
+  // la clave solo se guarda con su nombre y nunca la contraseña
+  const cifra = fs.readFileSync(path.join(raiz, 'assets/cifra.js'), 'utf8');
+  assert(/ALMACEN = 'tumesa\.clave'/.test(cifra) && !/setItem\([^)]*contrasena/.test(cifra), 'cifra.js guarda solo la clave derivada');
+  assert(/new TextEncoder\(\)\.encode\(contrasena\.normalize\('NFC'\)\), 'PBKDF2'/.test(cifra) && /ITERACIONES = 600000/.test(cifra) && /name: 'AES-GCM', length: 256/.test(cifra));
+  bien('cifra.js: PBKDF2 con 600 000 iteraciones y AES-256-GCM, y solo guarda la clave derivada');
   const mesa = fs.readFileSync(path.join(raiz, 'assets/mesa.js'), 'utf8');
   assert.strictEqual((mesa.match(/https:\/\/api\.github\.com/g) || []).length, 1);
   assert.strictEqual((mesa.match(/\bfetch\(/g) || []).length, 1);
@@ -47,12 +55,14 @@ let ok = 0; const bien = (t) => { ok++; console.log('  ok  ' + t); };
 
   // --- navegador ---
   const b = await chromium.launch();
-  const ctx = await b.newContext({ viewport: { width: 1000, height: 900 } });
+  const ctx = await b.newContext({ viewport: { width: 1000, height: 900 }, acceptDownloads: true });
+  await recordarPrueba(ctx);
   const robots = await ctx.request.get(base + '/robots.txt');
   assert.strictEqual(robots.status(), 200);
   assert(/Disallow: \//.test(await robots.text()));
   bien('robots.txt se sirve');
-  const casos = [['index.html', '#lista li'], ['torneo.html?t=sp-2026-27', '#cab h1, #cab h2'], ['index.html?d=datos/_prueba', '#lista li'], ['torneo.html?t=sp-ejemplo&d=datos/_prueba', '#cab h1, #cab h2'], ['publicar.html', '#token-estado p'], ['torneo.html?t=sp-2026-27&borrador=1', '#contenido .aviso']];
+  const casos = [['index.html', '#candado'], ['torneo.html?t=sp-2026-27', '#candado'], ['index.html?d=datos/_prueba', '#lista li'], ['torneo.html?t=sp-ejemplo&d=datos/_prueba', '#cab h1, #cab h2'],
+    ['torneo.html?t=sp-ejemplo&ver=folleto&d=datos/_prueba', '.normativa button'], ['publicar.html', '#token-estado p'], ['torneo.html?t=sp-2026-27&borrador=1', '#contenido .aviso']];
   for (const [url, esperado] of casos) {
     const pg = await ctx.newPage();
     const malos = []; const externas = [];
@@ -66,13 +76,18 @@ let ok = 0; const bien = (t) => { ok++; console.log('  ok  ' + t); };
     const csp = await pg.evaluate(() => window.__csp);
     assert.deepStrictEqual([csp, malos, externas], [[], [], []], url);
     assert.strictEqual(await pg.evaluate(() => document.querySelector('meta[name=robots]').content), 'noindex, nofollow');
+    if (esperado === '.normativa button') { // la descarga de la normativa (blob) tampoco choca con la CSP
+      const [d] = await Promise.all([pg.waitForEvent('download'), pg.click('.normativa button')]);
+      assert(/\.pdf$/.test(d.suggestedFilename())); await pg.waitForTimeout(300);
+      assert.deepStrictEqual(await pg.evaluate(() => window.__csp), [], 'descarga de la normativa');
+    }
     bien(`${url}: carga sin violaciones de CSP, sin errores en consola y sin pedir nada fuera del sitio`);
     await pg.close();
   }
   // la CSP está activa de verdad: un estilo en línea y un script en línea tienen que bloquearse
   const pg = await ctx.newPage();
   await pg.addInitScript(() => { window.__csp = []; document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(e.violatedDirective)); });
-  await pg.goto(base + '/index.html'); await pg.waitForSelector('#lista li');
+  await pg.goto(base + '/index.html?d=datos/_prueba'); await pg.waitForSelector('#lista li');
   await pg.evaluate(() => { document.body.setAttribute('style', 'color:red'); const s = document.createElement('script'); s.textContent = 'window.__x = 1'; document.head.append(s); });
   const v = await pg.evaluate(() => [window.__csp.slice(), window.__x]);
   assert(v[0].some((d) => d.startsWith('style-src')) && v[0].some((d) => d.startsWith('script-src')) && v[1] === undefined, JSON.stringify(v));

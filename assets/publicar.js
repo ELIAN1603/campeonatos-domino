@@ -1,5 +1,5 @@
-/* publicar.html · mesa de control: lista de campeonatos (web y borradores), subir un Excel con destino, publicar, ocultar, editar y eliminar.
-   Todo lo que toca GitHub pasa por assets/mesa.js. Los textos que vienen de un JSON se pintan siempre como texto. */
+/* publicar.html · mesa de control: contraseña de la web, lista de campeonatos (web y borradores), subir un Excel con destino, publicar, ocultar,
+   editar, eliminar y la normativa en PDF. Todo lo que toca GitHub pasa por assets/mesa.js, que cifra lo que va a la web. Los textos que vienen de un JSON se pintan siempre como texto. */
 (function () {
   'use strict';
   const { el, poner, instante, TIPOS, ESTADOS } = window.TuMesa;
@@ -51,7 +51,88 @@
     return false;
   }
 
-  /* ---------- paso 2: lista de campeonatos ---------- */
+  /* ---------- paso 2: contraseña de la web ---------- */
+  const btn = (txt, fn, principal) => el('button', { type: 'button', class: principal ? 'boton' : 'boton sec', onclick: fn }, txt);
+  const salidaClave = () => ({ pre: $('#registro-clave'), acc: $('#reintento-clave') });
+  async function pintarClave() {
+    const caja = $('#clave-estado');
+    if (!M.token.obtener()) { poner(caja, el('p', { class: 'nota' }, 'Pega primero el token en el paso 1.')); return; }
+    let st;
+    try { st = await M.estadoClave(); } catch (e) { if (!siCaduco(e)) poner(caja, el('p', { class: 'nota caja' }, e.message)); return; }
+    if (st.pendiente) {
+      poner(caja, el('p', { class: 'nota caja' }, 'Hay un cambio de contraseña a medias: parte de la web ya está cifrada con la contraseña nueva y parte con la de antes. Termínalo antes de hacer nada más.'),
+        el('div', { class: 'acciones' }, btn('Terminar el cambio', terminarCambio, true)));
+    } else if (!st.hay) {
+      poner(caja, el('p', null, 'La web todavía no tiene contraseña. Mientras no la tenga, lo publicado va sin cifrar y cualquiera puede leerlo.'),
+        el('div', { class: 'acciones' }, btn('Establecer la contraseña', () => panelContrasena(false), true)));
+    } else if (!st.abierta) {
+      const campo = el('input', { type: 'password', id: 'clave-web', autocomplete: 'current-password', autocapitalize: 'none', spellcheck: 'false', 'aria-label': 'Contraseña de la web' });
+      const recordar = el('input', { type: 'checkbox', id: 'recordar-web', checked: true });
+      const msg = el('p', { id: 'clave-web-msg', class: 'nota', 'aria-live': 'polite' });
+      const abrir = btn('Abrir', async () => {
+        abrir.disabled = true; msg.className = 'nota'; msg.textContent = 'Comprobando…';
+        if (await M.abrirClave(campo.value.trim(), recordar.checked)) { await cargarTorneos(); return; }
+        abrir.disabled = false; msg.className = 'nota caja'; msg.textContent = 'Esa contraseña no es la correcta. Revísala y vuelve a probar.';
+      }, true);
+      campo.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') abrir.click(); });
+      poner(caja, el('p', null, st.cambio ? 'La contraseña de la web ha cambiado desde otro sitio. Escribe la nueva.' : 'Escribe la contraseña de la web. Sin ella, esta página no puede leer ni publicar nada en la web.'),
+        campo, el('label', { class: 'opcion' }, recordar, el('span', null, 'Recordar en este dispositivo')), el('div', { class: 'acciones' }, abrir), msg);
+    } else {
+      poner(caja, el('p', null, 'La contraseña de la web está guardada en este navegador.'),
+        el('div', { class: 'acciones' },
+          btn('Cambiar la contraseña', () => panelContrasena(true)),
+          btn('Cifrar lo publicado', cifrarPublicado),
+          btn('Olvidar contraseña en este dispositivo', () => { M.olvidarClave(); poner($('#panel-clave')); cargarTorneos(); })));
+    }
+  }
+  // Establecer (primera vez) o cambiar: propone una frase de 5 palabras; vale otra de 14 caracteres o más.
+  function panelContrasena(cambio) {
+    const panel = $('#panel-clave');
+    const campo = el('textarea', { id: 'nueva-clave', class: 'frase', rows: 2, autocomplete: 'off', autocapitalize: 'none', spellcheck: 'false' }, Cifra.frase()); // textarea: la frase se lee entera en cualquier pantalla
+    const apuntada = el('input', { type: 'checkbox', id: 'apuntada' });
+    const nota = el('p', { class: 'nota', 'aria-live': 'polite' });
+    const si = el('button', { type: 'button', class: 'boton', disabled: true }, 'Cifrar con esta contraseña');
+    const revisar = () => {
+      if (/\n/.test(campo.value)) campo.value = campo.value.replace(/\s*\n\s*/g, ' '); // una contraseña no lleva saltos de línea
+      const valida = Cifra.contrasenaValida(campo.value);
+      si.disabled = !valida || !apuntada.checked;
+      nota.className = valida ? 'nota' : 'nota caja';
+      nota.textContent = valida ? '' : 'Tiene que tener 14 caracteres o más, sin espacios al principio ni al final.';
+    };
+    campo.addEventListener('input', revisar); apuntada.addEventListener('change', revisar);
+    si.addEventListener('click', async () => {
+      si.disabled = true; nota.className = 'nota'; nota.textContent = 'Preparando la clave…';
+      try {
+        const nueva = await Cifra.crearClaveJson(campo.value);
+        await M.empezarCambio(nueva);
+        const plan = await M.planRecifrar(nueva);
+        poner(panel);
+        await correr(plan.pasos, salidaClave(), cambio ? 'Contraseña cambiada. Quien tenga guardada la de antes tendrá que escribir la nueva.' : 'Contraseña puesta. Todo lo publicado va cifrado: ya puedes dársela a los jugadores.', cargarTorneos);
+      } catch (e) { if (!siCaduco(e)) { nota.className = 'nota caja'; nota.textContent = e.message; si.disabled = false; } }
+    });
+    poner(panel, el('div', { class: 'aviso-accion' },
+      el('p', null, el('b', null, cambio ? 'Cambiar la contraseña de la web' : 'Establecer la contraseña de la web')),
+      el('p', null, 'Es la contraseña que darás a los jugadores. Te propongo una frase de cinco palabras sacadas al azar, fácil de dictar y muy difícil de adivinar. Si prefieres otra, escríbela: tiene que tener 14 caracteres o más.'),
+      cambio ? el('p', null, 'Al cambiarla se vuelve a cifrar todo lo publicado. Quien tenga guardada la de antes tendrá que escribir la nueva.') : el('p', null, 'Se cifra todo lo que hay ahora en la web. Hasta que termine, la web dice a los visitantes que se está preparando.'),
+      el('p', null, 'Apúntala en un sitio seguro antes de seguir. La web no la guarda en ninguna parte y no se puede recuperar.')),
+    el('div', { class: 'campo' }, el('label', { for: 'nueva-clave' }, 'Contraseña nueva'), campo),
+    el('div', { class: 'acciones sin-margen' }, btn('Proponer otra', () => { campo.value = Cifra.frase(); revisar(); })),
+    el('label', { class: 'opcion sep-10' }, apuntada, el('span', null, 'La he apuntado en un sitio seguro')),
+    nota, el('div', { class: 'acciones' }, si, btn('Cancelar', () => poner(panel))));
+  }
+  async function terminarCambio() {
+    const estreno = !M.claveJson;
+    try {
+      const plan = await M.planRecifrar(M.pendiente);
+      await correr(plan.pasos, salidaClave(), estreno ? 'Contraseña puesta. Todo lo publicado va cifrado.' : 'Contraseña cambiada. Quien tenga guardada la de antes tendrá que escribir la nueva.', cargarTorneos);
+    } catch (e) { if (!siCaduco(e)) { const s = salidaClave(); s.pre.hidden = false; s.pre.textContent = '✖ ' + e.message; } }
+  }
+  async function cifrarPublicado() {
+    try { const plan = await M.planCifrarPublicado(); await correr(plan.pasos, salidaClave(), 'Todo lo publicado está cifrado.', cargarTorneos); }
+    catch (e) { if (!siCaduco(e)) { const s = salidaClave(); s.pre.hidden = false; s.pre.textContent = '✖ ' + e.message; } }
+  }
+
+  /* ---------- paso 3: lista de campeonatos ---------- */
   const marcarListo = (id) => { $(id).dataset.listo = '1'; };
   function limpiarListas() {
     for (const id of ['#lista-web', '#lista-borr']) { poner($(id), el('p', { class: 'nota' }, 'Pega el token en el paso 1 para ver la lista.')); marcarListo(id); }
@@ -64,14 +145,19 @@
     let ind;
     try { ind = await M.leer(clave, 'datos/indice.json'); } catch (e) { if (e.estado === 401) throw e; return { estado: 'error', msg: e.message }; }
     E.indices[clave] = ind ? ind.json : null;
+    let enClaro = !!(ind && ind.enClaro);
     const torneos = await Promise.all(((ind && ind.json.torneos) || []).map(async (entrada) => {
-      let publicado = null;
-      if (M.ID_OK.test(entrada.id || '')) { try { const a = await M.leer(clave, `datos/${entrada.id}/actual.json`); publicado = a && a.json.publicado; } catch (e) { if (e.estado === 401) throw e; } }
-      return { entrada, publicado };
+      let publicado = null, normativa = false;
+      if (M.ID_OK.test(entrada.id || '')) {
+        try { const a = await M.leer(clave, `datos/${entrada.id}/actual.json`); publicado = a && a.json.publicado; enClaro = enClaro || !!(a && a.enClaro); } catch (e) { if (e.estado === 401) throw e; }
+        if (clave === 'web') { try { const d = await M.archivosDe('web', entrada.id); normativa = !!(d && d.normativa); } catch (e) { if (e.estado === 401) throw e; } }
+      }
+      return { entrada, publicado, normativa };
     }));
-    return { estado: 'ok', torneos, soloLectura: !ac.push };
+    return { estado: 'ok', torneos, soloLectura: !ac.push, enClaro };
   }
-  async function cargarTorneos() {
+  async function cargarTorneos() { await pintarClave(); await cargarListas(); }
+  async function cargarListas() {
     if (!M.token.obtener()) { limpiarListas(); return; }
     for (const id of ['#lista-web', '#lista-borr']) { delete $(id).dataset.listo; poner($(id), el('p', { class: 'nota' }, 'Cargando…')); }
     E.indices = { web: null, borr: null };
@@ -87,6 +173,7 @@
     else {
       poner(caja,
         r.soloLectura ? el('p', { class: 'nota caja' }, 'Este token solo puede leer ' + M.REPOS[clave] + '. Para escribir hace falta el permiso «Contents: Read and write».') : null,
+        r.enClaro ? el('p', { class: 'nota caja' }, M.claveJson ? 'Hay archivos de la web sin cifrar. Pulsa «Cifrar lo publicado» en el paso 2.' : 'La web todavía no tiene contraseña y lo publicado está sin cifrar: cualquiera puede leerlo. Establece la contraseña en el paso 2.') : null,
         r.torneos.length ? el('ul', { class: 'torneos' }, r.torneos.map((t) => tarjeta(clave, t))) : el('p', { class: 'vacio' }, clave === 'web' ? 'Todavía no hay campeonatos en la web.' : 'No hay borradores.'));
     }
     marcarListo(clave === 'web' ? '#lista-web' : '#lista-borr');
@@ -120,12 +207,12 @@
     const ver = el('a', { class: 'boton sec', href: clave === 'web' ? `torneo.html?t=${encodeURIComponent(id)}` : `torneo.html?t=${encodeURIComponent(id)}&borrador=1`, target: '_blank', rel: 'noopener' }, 'Ver');
     const btn = (txt, fn) => el('button', { type: 'button', class: 'boton sec', onclick: fn }, txt);
     const acciones = clave === 'web'
-      ? [ver, btn('Editar', () => panelEditar(clave, e, panel)), btn('Ocultar', () => panelOcultar(e, panel)), btn('Eliminar', () => panelEliminar(clave, e, panel))]
+      ? [ver, btn('Editar', () => panelEditar(clave, e, panel)), btn('Subir normativa (PDF)', () => panelNormativa(e, panel)), t.normativa ? btn('Quitar normativa', () => panelQuitarNormativa(e, panel)) : null, btn('Ocultar', () => panelOcultar(e, panel)), btn('Eliminar', () => panelEliminar(clave, e, panel))]
       : [ver, btn('Editar', () => panelEditar(clave, e, panel)), btn('Publicar', () => panelPublicar(e, panel)), btn('Eliminar', () => panelEliminar(clave, e, panel))];
     return el('li', { class: 'torneo', 'data-id': id },
       el('h4', { class: 'torneo-nombre' }, e.nombre || id),
       el('p', { class: 'torneo-info' }, [tipo.nombre, ESTADOS[e.estado] || e.estado, e.temporada && 'Temporada ' + e.temporada, `${tipo.jornada} ${e.jornada_actual} de ${e.n_jornadas}`].filter(Boolean).join(' · ')),
-      el('p', { class: 'torneo-info' }, 'Última publicación: ' + (t.publicado ? instante(t.publicado) : 'sin datos'), tambien ? (clave === 'web' ? ' · También hay un borrador' : ' · También está en la web') : ''),
+      el('p', { class: 'torneo-info' }, 'Última publicación: ' + (t.publicado ? instante(t.publicado) : 'sin datos'), tambien ? (clave === 'web' ? ' · También hay un borrador' : ' · También está en la web') : '', t.normativa ? ' · Con normativa (PDF)' : ''),
       el('p', { class: 'torneo-info id' }, 'id: ', el('code', null, id)),
       el('div', { class: 'acciones' }, acciones), panel);
   }
@@ -179,6 +266,7 @@
         el('p', null, el('b', null, `Ocultar «${nombreDe(e)}»`)),
         el('p', null, `Se copian ${plan.archivos} archivos a campeonatos-borradores, se quita de indice.json y se borran de campeonatos-domino. Deja de verse en la web.`),
         el('p', null, 'Ojo: lo que ya se publicó queda en el historial público de git. Quien sepa buscarlo lo puede ver. Si publicaste un dato por error, ocultar no lo borra del historial.'),
+        plan.normativa ? el('p', null, 'La normativa (PDF) se quita de la web. Si vuelves a publicar este campeonato, súbela otra vez.') : null,
       ], 'Sí, ocultar', 'Ocultado. Ya está en borradores y fuera de la web.');
     });
   }
@@ -196,6 +284,27 @@
           el('p', null, `Para confirmar, escribe el id: `, el('code', null, id))),
         avisoOtros(plan.otros), campo, el('div', { class: 'acciones' }, si, cancelar(panel)));
     });
+  }
+  function panelNormativa(e, panel) {
+    const archivo = el('input', { type: 'file', accept: '.pdf,application/pdf', 'aria-label': 'PDF de la normativa' });
+    const nota = el('p', { class: 'nota', 'aria-live': 'polite' });
+    const si = el('button', { type: 'button', class: 'boton', disabled: true }, 'Cifrar y subir');
+    let plan = null;
+    archivo.addEventListener('change', async () => {
+      plan = null; si.disabled = true; nota.className = 'nota'; nota.textContent = '';
+      const f = archivo.files[0]; if (!f) return;
+      try { plan = M.planNormativa(e.id, new Uint8Array(await f.arrayBuffer())); si.disabled = false; nota.textContent = `${f.name} · ${Math.max(1, Math.round(f.size / 1024))} KB`; }
+      catch (x) { nota.className = 'nota caja'; nota.textContent = x.message; }
+    });
+    si.addEventListener('click', async () => { if (!plan) return; si.disabled = true; poner(panel); await correr(plan.pasos, reg(), 'Normativa subida. La web la ofrece en la pestaña Calendario en uno o dos minutos.', cargarTorneos); });
+    poner(panel, el('div', { class: 'aviso-accion' },
+      el('p', null, el('b', null, `Normativa de «${nombreDe(e)}»`)),
+      el('p', null, `Elige el PDF original. Se cifra en este ordenador con la contraseña de la web y se sube como datos/${e.id}/normativa.pdf.cifrado; si ya había una, se sustituye. Los jugadores la descargan desde la pestaña Calendario. Máximo ${M.MAX_PDF / 1048576} MB.`)),
+    archivo, nota, el('div', { class: 'acciones' }, si, cancelar(panel)));
+  }
+  function panelQuitarNormativa(e, panel) {
+    confirmar(panel, M.planQuitarNormativa(e.id), [el('p', null, el('b', null, `Quitar la normativa de «${nombreDe(e)}»`)), el('p', null, 'Se borra de la web. El PDF que tengas en tu ordenador no se toca.')],
+      'Sí, quitar la normativa', 'Normativa quitada.');
   }
   function panelEditar(clave, e, panel) {
     const nombre = el('textarea', { id: 'ed-nombre', rows: 3, maxlength: 120 }, e.nombre || ''); // textarea: un nombre largo se parte en líneas y se ve entero

@@ -1,0 +1,340 @@
+{
+ "version": "1.0",
+ "publicado": "2025-11-23T19:00:00Z",
+ "torneo": {
+  "id": "sp-ejemplo-anterior",
+  "nombre": "CAMPEONATO SÚPER-PRESTIGIO ANTERIOR (EJEMPLO)",
+  "organizador": "FVD EJEMPLO",
+  "tipo": "sp",
+  "temporada": "2025-26",
+  "fecha": "2025-10-20",
+  "lugar": null,
+  "n_jornadas": 6,
+  "tantos_meta": 300,
+  "puntos_ausencia": 300,
+  "n_participantes": 8,
+  "hay_b": true,
+  "jornada_b": 4,
+  "n_b": 4,
+  "estado": "terminado",
+  "contacto": "Jesús Eduardo Elián C.",
+  "normativa_url": null,
+  "criterios": [
+   "Encuentros ganados",
+   "Diferencia de partidas",
+   "Diferencia de tantos",
+   "Tantos a favor",
+   "Criterio informático"
+  ]
+ },
+ "jornada": {
+  "numero": 3,
+  "completa": true,
+  "mesas_pendientes": 0,
+  "sorteo": null,
+  "sin_sortear": false,
+  "emparejamiento": "fijado",
+  "plazo_desde": "2025-11-17",
+  "plazo_hasta": "2025-11-30"
+ },
+ "participantes": [
+  {
+   "id": 1,
+   "j1_nombre": "Josep",
+   "j1_apellido1": "Roig",
+   "j2_nombre": "Neus",
+   "j2_apellido1": "Vidal",
+   "corto": "Roig-Vidal",
+   "zona": "Norte",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 2,
+   "j1_nombre": "Amparo",
+   "j1_apellido1": "Cano",
+   "j2_nombre": "Raül",
+   "j2_apellido1": "Soriano",
+   "corto": "Cano-Soriano",
+   "zona": "Sur",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 3,
+   "j1_nombre": "Vicent",
+   "j1_apellido1": "Pons",
+   "j2_nombre": "Empar",
+   "j2_apellido1": "Giner",
+   "corto": "Pons-Giner",
+   "zona": "Norte",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 4,
+   "j1_nombre": "Carles",
+   "j1_apellido1": "Ribes",
+   "j2_nombre": "Pilar",
+   "j2_apellido1": "Aguilar",
+   "corto": "Ribes-Aguilar",
+   "zona": "Ribera",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 5,
+   "j1_nombre": "Hugo",
+   "j1_apellido1": "Lorente",
+   "j2_nombre": "Toni",
+   "j2_apellido1": "Ferrando",
+   "corto": "Lorente-Ferrando",
+   "zona": "Sur",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 6,
+   "j1_nombre": "Lluís",
+   "j1_apellido1": "Mas",
+   "j2_nombre": "Gemma",
+   "j2_apellido1": "Orts",
+   "corto": "Mas-Orts",
+   "zona": "Norte",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 7,
+   "j1_nombre": "Nuria",
+   "j1_apellido1": "Escrivá",
+   "j2_nombre": "Pau",
+   "j2_apellido1": "Tomás",
+   "corto": "Escrivá-Tomás",
+   "zona": "Sur",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 8,
+   "j1_nombre": "Quim",
+   "j1_apellido1": "Moreno",
+   "j2_nombre": "Inés",
+   "j2_apellido1": "Villar",
+   "corto": "Moreno-Villar",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  }
+ ],
+ "sustituciones": [
+  {
+   "id": 5,
+   "desde": 3,
+   "sale_nombre": "Rosa",
+   "sale_apellido1": "Beltrán",
+   "entra_nombre": "Hugo",
+   "entra_apellido1": "Lorente"
+  }
+ ],
+ "clasificacion": [
+  {
+   "grupo": "A",
+   "puesto": 1,
+   "id": 3,
+   "jug": 3,
+   "gan": 3,
+   "pg": 6,
+   "pp": 1,
+   "dp": 5,
+   "tf": 2054,
+   "tc": 1317,
+   "dt": 737,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 2,
+   "id": 2,
+   "jug": 3,
+   "gan": 2,
+   "pg": 4,
+   "pp": 2,
+   "dp": 2,
+   "tf": 1522,
+   "tc": 1416,
+   "dt": 106,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 3,
+   "id": 8,
+   "jug": 3,
+   "gan": 2,
+   "pg": 4,
+   "pp": 3,
+   "dp": 1,
+   "tf": 1998,
+   "tc": 1424,
+   "dt": 574,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 4,
+   "id": 5,
+   "jug": 3,
+   "gan": 2,
+   "pg": 4,
+   "pp": 3,
+   "dp": 1,
+   "tf": 1785,
+   "tc": 1593,
+   "dt": 192,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 5,
+   "id": 1,
+   "jug": 3,
+   "gan": 1,
+   "pg": 3,
+   "pp": 4,
+   "dp": -1,
+   "tf": 1284,
+   "tc": 1478,
+   "dt": -194,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 6,
+   "id": 6,
+   "jug": 3,
+   "gan": 1,
+   "pg": 3,
+   "pp": 4,
+   "dp": -1,
+   "tf": 1483,
+   "tc": 1918,
+   "dt": -435,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 7,
+   "id": 4,
+   "jug": 3,
+   "gan": 1,
+   "pg": 2,
+   "pp": 4,
+   "dp": -2,
+   "tf": 1590,
+   "tc": 1720,
+   "dt": -130,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 8,
+   "id": 7,
+   "jug": 3,
+   "gan": 0,
+   "pg": 1,
+   "pp": 6,
+   "dp": -5,
+   "tf": 927,
+   "tc": 1777,
+   "dt": -850,
+   "pendiente": false,
+   "desempate": null
+  }
+ ],
+ "emparejamientos": [
+  {
+   "grupo": "A",
+   "mesa": 1,
+   "mesa_grupo": 1,
+   "izq": [
+    2
+   ],
+   "dcha": [
+    3
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 0,
+   "p_dcha": 2,
+   "t_izq": 322,
+   "t_dcha": 600
+  },
+  {
+   "grupo": "A",
+   "mesa": 2,
+   "mesa_grupo": 2,
+   "izq": [
+    1
+   ],
+   "dcha": [
+    8
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 1,
+   "p_dcha": 2,
+   "t_izq": 476,
+   "t_dcha": 878
+  },
+  {
+   "grupo": "A",
+   "mesa": 3,
+   "mesa_grupo": 3,
+   "izq": [
+    4
+   ],
+   "dcha": [
+    5
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 0,
+   "p_dcha": 2,
+   "t_izq": 530,
+   "t_dcha": 600
+  },
+  {
+   "grupo": "A",
+   "mesa": 4,
+   "mesa_grupo": 4,
+   "izq": [
+    6
+   ],
+   "dcha": [
+    7
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 0,
+   "t_izq": 600,
+   "t_dcha": 464
+  }
+ ]
+}

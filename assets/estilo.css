@@ -254,3 +254,12 @@ footer.pie { background: var(--barra); color: var(--barra-suave); font-size: .88
 .sep-12 { margin-top: 12px; }
 .sep-10 { margin-top: 10px; }
 
+
+/* pantalla de contraseña (index.html y torneo.html) */
+.candado { max-width: 460px; margin: 8px auto 24px; background: var(--papel); border: 1px solid var(--linea); border-radius: var(--radio); padding: 16px; overflow-wrap: anywhere; }
+.candado h2 { margin: 0 0 8px; font-size: 1.2rem; }
+.candado form > label[for] { display: block; font-weight: 700; margin: 12px 0 4px; }
+.candado input[type=password], .paso .frase { resize: none; width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--tinta); background: var(--fondo); font-size: 1rem; }
+.candado .opcion { margin-top: 8px; }
+.pie .boton.sec { color: var(--barra-texto); border-color: var(--barra-texto); margin-top: 8px; padding: 8px 14px; }
+.normativa { margin: 0 0 16px; }

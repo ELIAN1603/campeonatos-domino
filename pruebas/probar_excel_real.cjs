@@ -14,7 +14,7 @@ const fs = require('fs'), path = require('path');
 const XLSX = require('../assets/xlsx.mini.min.js');
 const C = require('../assets/contrato.js');
 const { chromium } = require('playwright');
-const { instalar } = require('./api_simulada.cjs');
+const { instalar, recordarWeb } = require('./api_simulada.cjs');
 
 const ficticio = process.argv.includes('--ficticio');   // casos de prueba con nombres como Nom1a: V06 bloquea a propósito
 const [xlsx, jsonPy, base = 'http://localhost:8765'] = process.argv.slice(2).filter((x) => !x.startsWith('--'));
@@ -63,6 +63,7 @@ console.log(`${path.basename(xlsx)} (${MB} MB), jornada ${esperado.jornada.numer
   const ctx = await b.newContext({ viewport: { width: 1000, height: 900 } });
   await ctx.addInitScript(() => localStorage.setItem('tumesa.token', 'ghp_TOKEN_DE_PRUEBA'));
   const api = await instalar(ctx);
+  await recordarWeb(ctx); // la contraseña de la web ya está en este navegador
   const pg = await ctx.newPage();
   const errores = []; pg.on('pageerror', (e) => errores.push(e.message));
   await pg.goto(base + '/publicar.html');
@@ -80,8 +81,11 @@ console.log(`${path.basename(xlsx)} (${MB} MB), jornada ${esperado.jornada.numer
   const id = esperado.torneo.id, nn = String(esperado.jornada.numero).padStart(2, '0');
   assert.deepStrictEqual(api.puts.map((p) => p.clave + ' ' + p.ruta), [`web datos/${id}/jornada_${nn}.json`, `web datos/${id}/actual.json`, 'web datos/indice.json']);
   const sinPub = (t) => t.replace(/"publicado": "[^"]*"/g, '"publicado": "X"');
-  assert.strictEqual(sinPub(api.repos.web.get(`datos/${id}/jornada_${nn}.json`).texto), sinPub(textoPy));
-  bien('jornada_NN.json escrito por publicar.html: idéntico, byte a byte, al de web_export.py (salvo `publicado`)');
+  assert.strictEqual(sinPub(api.bytes('web', `datos/${id}/jornada_${nn}.json`).toString('utf8')), sinPub(textoPy));
+  bien('jornada_NN.json escrito por publicar.html: idéntico, byte a byte, al de web_export.py (salvo `publicado`), una vez descifrado');
+  assert.deepStrictEqual(api.enClaro, []);
+  assert(api.puts.every((p) => api.cifradoCon(p.ruta) === 0));
+  bien('los tres archivos subieron cifrados con la clave de la web');
   const act = api.json('web', `datos/${id}/actual.json`);
   assert.deepStrictEqual(quitar(act), quitar(esperado));
   assert.deepStrictEqual(act.jornadas.map((x) => x.numero), [esperado.jornada.numero]);

@@ -1,8 +1,8 @@
 DATOS DE PRUEBA. Ningún campeonato de esta carpeta existe de verdad.
 
 Los nombres están inventados. Sirven para probar la web y publicar.html sin tocar los datos reales.
+Esta carpeta los tiene en claro. La web los lee cifrados desde datos/_prueba, con la contraseña
+de prueba «datos de prueba de la mesa». Tras cambiar algo aquí: node pruebas/cifrar_prueba.cjs
 No están en datos/indice.json: la portada real no los enseña.
 Para verlos: abre la web con ?d=datos/_prueba al final de la dirección, por ejemplo
   index.html?d=datos/_prueba
-
-Borra esta carpeta entera cuando ya no haga falta.

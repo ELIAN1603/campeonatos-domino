@@ -1,4 +1,4 @@
-// Prueba del contrato: crea un .xlsx con la hoja WEB a partir de los JSON de datos/_prueba,
+// Prueba del contrato: crea un .xlsx con la hoja WEB a partir de los JSON de pruebas/datos (los de datos/_prueba, en claro),
 // lo lee con SheetJS como hará publicar.html y comprueba que sale el mismo JSON.
 // Uso: node pruebas/probar_contrato.cjs
 const assert = require('assert');
@@ -15,7 +15,7 @@ const ok = (nombre, fn) => { try { fn(); hechos++; console.log('  ok  ' + nombre
 
 function hoja(id) {
   const xl = path.join(tmp, id + '.xlsx');
-  execFileSync('python3', [path.join(__dirname, 'hacer_xlsx.py'), path.join(raiz, 'datos/_prueba', id, 'actual.json'), xl]);
+  execFileSync('python3', [path.join(__dirname, 'hacer_xlsx.py'), path.join(__dirname, 'datos', id, 'actual.json'), xl]);
   const wb = XLSX.read(fs.readFileSync(xl), { type: 'buffer', sheets: 'WEB' });
   return { wb, ws: wb.Sheets.WEB, xl };
 }
@@ -26,7 +26,7 @@ for (const id of ids) {
   const { wb, ws } = hoja(id);
   ok(`${id}: solo se lee la hoja WEB`, () => assert.deepStrictEqual(Object.keys(wb.Sheets), ['WEB']));
   const r = C.leer(ws);
-  const esperado = JSON.parse(fs.readFileSync(path.join(raiz, 'datos/_prueba', id, 'actual.json'), 'utf8'));
+  const esperado = JSON.parse(fs.readFileSync(path.join(__dirname, 'datos', id, 'actual.json'), 'utf8'));
   ok(`${id}: JSON idéntico al de referencia`, () => assert.deepStrictEqual(sinJornadas(C.construir(r, 'x')), sinJornadas(esperado)));
   ok(`${id}: orden de claves y texto idénticos`, () => {
     const a = C.aTexto(C.construir(r, esperado.publicado));
@@ -62,6 +62,11 @@ ok('V03 cabecera cambiada', () => assert.deepStrictEqual(cod(con(SP, (w) => pone
 ok('V04 id no válido', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, celda('id'), 'Sp Ejemplo')), 'V04'), ['bloquea']));
 ok('V04 id usado por otro tipo', () => assert.deepStrictEqual(cod(con(SP, () => {}, { indice: { torneos: [{ id: 'sp-ejemplo', tipo: 'parejas', nombre: 'X' }] } }), 'V04'), ['bloquea']));
 ok('V04b mismo id otro nombre', () => assert.deepStrictEqual(cod(con(SP, () => {}, { indice: { torneos: [{ id: 'sp-ejemplo', tipo: 'sp', nombre: 'OTRO' }] } }), 'V04b'), ['confirma']));
+// V20: los nombres de archivo y carpeta de la web no delatan a nadie (el id va en la ruta datos/<id>/ y no se cifra)
+ok('V20 id con un apellido de un participante', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, celda('id'), 'final-escriva-2026')), 'V20'), ['bloquea']));
+ok('V20 id con nombre y apellido', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, celda('id'), 'pareja-pons-mas')), 'V20'), ['bloquea']));
+ok('V20 un id normal no salta', () => assert.deepStrictEqual(cod(con(SP, () => {}), 'V20'), []));
+ok('V20 una sílaba suelta no salta (mas en «master»)', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, celda('id'), 'master-2026')), 'V20'), []));
 ok('V05 celda con error', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, 'Z9', '#N/A', 'e')), 'V05'), ['bloquea']));
 ok('V05 ¿LICENCIA?', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, 'G5', '¿LICENCIA?')), 'V05'), ['bloquea']));
 ok('V19 texto de más de 300 caracteres', () => assert.deepStrictEqual(cod(con(SP, (w) => poner(w, celda('lugar'), 'x'.repeat(301))), 'V19'), ['bloquea']));

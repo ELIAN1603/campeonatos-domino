@@ -151,6 +151,12 @@
       if (e && e.tipo !== t.tipo) add('V04', 'bloquea', 'El identificador del torneo ya lo usa otro campeonato.');
       else if (e && e.nombre !== t.nombre) add('V04b', 'confirma', `Ya hay un torneo con este identificador y otro nombre («${e.nombre}»). ¿Es el mismo?`);
     }
+    // V20 el id va sin cifrar en la ruta (datos/<id>/): no puede llevar el nombre ni el apellido de nadie
+    const sinTilde = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const palabras = new Set();
+    for (const p of [...j.participantes, ...j.sustituciones]) for (const [k, x] of Object.entries(p)) if (/(nombre|apellido1)$/.test(k)) for (const w of sinTilde(x).split(/[^a-zñ]+/)) if (w.length >= 3) palabras.add(w);
+    const delata = String(t.id || '').split('-').filter((x) => palabras.has(x));
+    if (delata.length) add('V20', 'bloquea', `El identificador del torneo (${t.id}) lleva «${delata[0]}», que es el nombre o el apellido de un participante. Las carpetas de la web no se cifran: cambia el identificador en la hoja INICIO.`);
     // V05 errores de celda
     if (r.celdasError.length) add('V05', 'bloquea', `Hay un error en la hoja WEB, en la celda ${r.celdasError[0]}${r.celdasError.length > 1 ? ' y otras ' + (r.celdasError.length - 1) : ''}.`);
     // V19 textos desmesurados

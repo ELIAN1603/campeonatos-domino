@@ -1,0 +1,2067 @@
+{
+ "version": "1.0",
+ "publicado": "2026-11-15T14:11:46Z",
+ "torneo": {
+  "id": "sp-grande",
+  "nombre": "SUPER-PRESTIGIO GRANDE (EJEMPLO CON NOMBRES INVENTADOS)",
+  "organizador": "Federación de ejemplo",
+  "tipo": "sp",
+  "temporada": "2026-2027",
+  "fecha": "2026-10-13",
+  "lugar": null,
+  "n_jornadas": 14,
+  "tantos_meta": 300,
+  "puntos_ausencia": 300,
+  "n_participantes": 54,
+  "hay_b": false,
+  "jornada_b": null,
+  "n_b": null,
+  "estado": "en_juego",
+  "contacto": "Mesa de control de ejemplo",
+  "normativa_url": null,
+  "criterios": [
+   "Encuentros ganados",
+   "Diferencia de partidas",
+   "Diferencia de tantos",
+   "Tantos a favor",
+   "Criterio informático"
+  ]
+ },
+ "jornada": {
+  "numero": 1,
+  "completa": true,
+  "mesas_pendientes": 0,
+  "sorteo": "A",
+  "sin_sortear": false,
+  "emparejamiento": "fijado",
+  "plazo_desde": "2026-10-13",
+  "plazo_hasta": "2026-10-26"
+ },
+ "jornadas": [
+  {
+   "numero": 1,
+   "completa": true,
+   "publicado": "2026-11-15T14:11:46Z"
+  },
+  {
+   "numero": 2,
+   "completa": true,
+   "publicado": "2026-11-15T14:11:58Z"
+  },
+  {
+   "numero": 3,
+   "completa": false,
+   "publicado": "2026-11-15T14:09:42Z"
+  }
+ ],
+ "participantes": [
+  {
+   "id": 1,
+   "j1_nombre": "Andrés",
+   "j1_apellido1": "Abril",
+   "j2_nombre": "Beatriz",
+   "j2_apellido1": "Bosque",
+   "corto": "Abril-Bosque",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 2,
+   "j1_nombre": "Casimiro",
+   "j1_apellido1": "Cañada",
+   "j2_nombre": "Dolores",
+   "j2_apellido1": "Dehesa",
+   "corto": "Cañada-Dehesa",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 3,
+   "j1_nombre": "Eulalio",
+   "j1_apellido1": "Encina",
+   "j2_nombre": "Fernanda",
+   "j2_apellido1": "Fresno",
+   "corto": "Encina-Fresno",
+   "zona": "XXI",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 4,
+   "j1_nombre": "Gonzalo",
+   "j1_apellido1": "Granado",
+   "j2_nombre": "Hortensia",
+   "j2_apellido1": "Granado",
+   "corto": "Granado-Granado",
+   "zona": "BD",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 5,
+   "j1_nombre": "Isidoro",
+   "j1_apellido1": "Huerta",
+   "j2_nombre": "Julia",
+   "j2_apellido1": "Ibón",
+   "corto": "Huerta-Ibón",
+   "zona": "MIR",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 6,
+   "j1_nombre": "Leandro",
+   "j1_apellido1": "Jara",
+   "j2_nombre": "Marisa",
+   "j2_apellido1": "Laguna",
+   "corto": "Jara-Laguna",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 7,
+   "j1_nombre": "Nicolás",
+   "j1_apellido1": "Manantial",
+   "j2_nombre": "Olga",
+   "j2_apellido1": "Manantial",
+   "corto": "Manantial-Manantial",
+   "zona": "BUÑ",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 8,
+   "j1_nombre": "Pascual",
+   "j1_apellido1": "Nogal",
+   "j2_nombre": "Remedios",
+   "j2_apellido1": "Olmeda",
+   "corto": "Nogal-Olmeda",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 9,
+   "j1_nombre": "Severino",
+   "j1_apellido1": "Pradera",
+   "j2_nombre": "Tecla",
+   "j2_apellido1": "Quintana",
+   "corto": "Pradera-Quintana",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 10,
+   "j1_nombre": "Ulises",
+   "j1_apellido1": "Ribera",
+   "j2_nombre": "Valentina",
+   "j2_apellido1": "Sauce",
+   "corto": "Ribera-Sauce",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 11,
+   "j1_nombre": "Wenceslao",
+   "j1_apellido1": "Tomillo",
+   "j2_nombre": "Pascual",
+   "j2_apellido1": "Urbión",
+   "corto": "Tomillo-Urbión",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 12,
+   "j1_nombre": "Ximena",
+   "j1_apellido1": "Vega",
+   "j2_nombre": "Yolanda",
+   "j2_apellido1": "Yedra",
+   "corto": "Vega-Yedra",
+   "zona": "ZAI",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 13,
+   "j1_nombre": "Zacarías",
+   "j1_apellido1": "Zarza",
+   "j2_nombre": "Andrés",
+   "j2_apellido1": "Alameda",
+   "corto": "Zarza-Alameda",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 14,
+   "j1_nombre": "Beatriz",
+   "j1_apellido1": "Brezo",
+   "j2_nombre": "Casimiro",
+   "j2_apellido1": "Collado",
+   "corto": "Brezo-Collado",
+   "zona": "ZAI",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 15,
+   "j1_nombre": "Dolores",
+   "j1_apellido1": "Duna",
+   "j2_nombre": "Eulalio",
+   "j2_apellido1": "Espliego",
+   "corto": "Duna-Espliego",
+   "zona": "BD",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 16,
+   "j1_nombre": "Fernanda",
+   "j1_apellido1": "Cabezo",
+   "j2_nombre": "Gonzalo",
+   "j2_apellido1": "Galayo",
+   "corto": "Cabezo-Galayo",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 17,
+   "j1_nombre": "Hortensia",
+   "j1_apellido1": "Hondonada",
+   "j2_nombre": "Andrés",
+   "j2_apellido1": "Laguna",
+   "corto": "Hondonada-Laguna",
+   "zona": "XXI",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 18,
+   "j1_nombre": "Isidoro",
+   "j1_apellido1": "Islote",
+   "j2_nombre": "Julia",
+   "j2_apellido1": "Junquera",
+   "corto": "Islote-Junquera",
+   "zona": "TOR",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 19,
+   "j1_nombre": "Gonzalo",
+   "j1_apellido1": "Lindero",
+   "j2_nombre": "Leandro",
+   "j2_apellido1": "Granado",
+   "corto": "Lindero-Granado",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 20,
+   "j1_nombre": "Gonzalo",
+   "j1_apellido1": "Majada",
+   "j2_nombre": "Marisa",
+   "j2_apellido1": "Navazo",
+   "corto": "Majada-Navazo",
+   "zona": "TOR",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 21,
+   "j1_nombre": "Nicolás",
+   "j1_apellido1": "Oteruelo",
+   "j2_nombre": "Olga",
+   "j2_apellido1": "Oteruelo",
+   "corto": "Oteruelo-Oteruelo",
+   "zona": "BUÑ",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 22,
+   "j1_nombre": "Pascual",
+   "j1_apellido1": "Peñasco",
+   "j2_nombre": "Isidoro",
+   "j2_apellido1": "Robledo",
+   "corto": "Peñasco-Robledo",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 23,
+   "j1_nombre": "Zacarías",
+   "j1_apellido1": "Sabina",
+   "j2_nombre": "Remedios",
+   "j2_apellido1": "Tejeda",
+   "corto": "Sabina-Tejeda",
+   "zona": "XXI",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 24,
+   "j1_nombre": "Isidoro",
+   "j1_apellido1": "Umbría",
+   "j2_nombre": "Pascual",
+   "j2_apellido1": "Vado",
+   "corto": "Umbría-Vado",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 25,
+   "j1_nombre": "Severino",
+   "j1_apellido1": "Atalaya",
+   "j2_nombre": "Tecla",
+   "j2_apellido1": "Nogal",
+   "corto": "Atalaya-Nogal",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 26,
+   "j1_nombre": "Ulises",
+   "j1_apellido1": "Barranco",
+   "j2_nombre": "Valentina",
+   "j2_apellido1": "Yedra",
+   "corto": "Barranco-Yedra",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 27,
+   "j1_nombre": "Julia",
+   "j1_apellido1": "Cerrillo",
+   "j2_nombre": "Gonzalo",
+   "j2_apellido1": "Collado",
+   "corto": "Cerrillo-Collado",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 28,
+   "j1_nombre": "Eulalio",
+   "j1_apellido1": "Escarcha",
+   "j2_nombre": "Wenceslao",
+   "j2_apellido1": "Fontecilla",
+   "corto": "Escarcha-Fontecilla",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 29,
+   "j1_nombre": "Ximena",
+   "j1_apellido1": "Navazo",
+   "j2_nombre": "Yolanda",
+   "j2_apellido1": "Nogal",
+   "corto": "Navazo-Nogal",
+   "zona": "MIR",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 30,
+   "j1_nombre": "Dolores",
+   "j1_apellido1": "Espliego",
+   "j2_nombre": "Zacarías",
+   "j2_apellido1": "Laguna",
+   "corto": "Espliego-Laguna",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 31,
+   "j1_nombre": "Andrés",
+   "j1_apellido1": "Garganta",
+   "j2_nombre": "Beatriz",
+   "j2_apellido1": "Hayedo",
+   "corto": "Garganta-Hayedo",
+   "zona": "TOR",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 32,
+   "j1_nombre": "Eulalio",
+   "j1_apellido1": "Lomas",
+   "j2_nombre": "Casimiro",
+   "j2_apellido1": "Madroño",
+   "corto": "Lomas-Madroño",
+   "zona": "ACE",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 33,
+   "j1_nombre": "Julia",
+   "j1_apellido1": "Neveros",
+   "j2_nombre": "Dolores",
+   "j2_apellido1": "Pinar",
+   "corto": "Neveros-Pinar",
+   "zona": "ACE",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 34,
+   "j1_nombre": "Dolores",
+   "j1_apellido1": "Rocío",
+   "j2_nombre": "Gonzalo",
+   "j2_apellido1": "Serrano",
+   "corto": "Rocío-Serrano",
+   "zona": "BEN",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 35,
+   "j1_nombre": "Olga",
+   "j1_apellido1": "Tarayal",
+   "j2_nombre": "Eulalio",
+   "j2_apellido1": "Valdés",
+   "corto": "Tarayal-Valdés",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 36,
+   "j1_nombre": "Fernanda",
+   "j1_apellido1": "Albar",
+   "j2_nombre": "Casimiro",
+   "j2_apellido1": "Berrocal",
+   "corto": "Albar-Berrocal",
+   "zona": "BUÑ",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 37,
+   "j1_nombre": "Gonzalo",
+   "j1_apellido1": "Coscojar",
+   "j2_nombre": "Gonzalo",
+   "j2_apellido1": "Collado",
+   "corto": "Coscojar-Collado",
+   "zona": "ZAI",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 38,
+   "j1_nombre": "Hortensia",
+   "j1_apellido1": "Escobar",
+   "j2_nombre": "Wenceslao",
+   "j2_apellido1": "Gavilán",
+   "corto": "Escobar-Gavilán",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 39,
+   "j1_nombre": "Isidoro",
+   "j1_apellido1": "Hinojo",
+   "j2_nombre": "Zacarías",
+   "j2_apellido1": "Lentisco",
+   "corto": "Hinojo-Lentisco",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 40,
+   "j1_nombre": "Julia",
+   "j1_apellido1": "Nogal",
+   "j2_nombre": "Fernanda",
+   "j2_apellido1": "Molinar",
+   "corto": "Nogal-Molinar",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 41,
+   "j1_nombre": "Leandro",
+   "j1_apellido1": "Nava",
+   "j2_nombre": "Marisa",
+   "j2_apellido1": "Nogal",
+   "corto": "Nava-Nogal",
+   "zona": "BEN",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 42,
+   "j1_nombre": "Nicolás",
+   "j1_apellido1": "Parral",
+   "j2_nombre": "Fernanda",
+   "j2_apellido1": "Quejigo",
+   "corto": "Parral-Quejigo",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 43,
+   "j1_nombre": "Gonzalo",
+   "j1_apellido1": "Romeral",
+   "j2_nombre": "Julia",
+   "j2_apellido1": "Solana",
+   "corto": "Romeral-Solana",
+   "zona": "BD",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 44,
+   "j1_nombre": "Olga",
+   "j1_apellido1": "Alameda",
+   "j2_nombre": "Pascual",
+   "j2_apellido1": "Torca",
+   "corto": "Alameda-Torca",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 45,
+   "j1_nombre": "Fernanda",
+   "j1_apellido1": "Villar",
+   "j2_nombre": "Remedios",
+   "j2_apellido1": "Aliaga",
+   "corto": "Villar-Aliaga",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 46,
+   "j1_nombre": "Andrés",
+   "j1_apellido1": "Nogal",
+   "j2_nombre": "Severino",
+   "j2_apellido1": "Bardal",
+   "corto": "Nogal-Bardal",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 47,
+   "j1_nombre": "Tecla",
+   "j1_apellido1": "Cardón",
+   "j2_nombre": "Ulises",
+   "j2_apellido1": "Enebral",
+   "corto": "Cardón-Enebral",
+   "zona": "XXI",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 48,
+   "j1_nombre": "Valentina",
+   "j1_apellido1": "Gamonal",
+   "j2_nombre": "Wenceslao",
+   "j2_apellido1": "Helechal",
+   "corto": "Gamonal-Helechal",
+   "zona": "MIR",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 49,
+   "j1_nombre": "Wenceslao",
+   "j1_apellido1": "Jaral",
+   "j2_nombre": "Isidoro",
+   "j2_apellido1": "Lirio",
+   "corto": "Jaral-Lirio",
+   "zona": "XXI",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 50,
+   "j1_nombre": "Ximena",
+   "j1_apellido1": "Mimbral",
+   "j2_nombre": "Julia",
+   "j2_apellido1": "Narcea",
+   "corto": "Mimbral-Narcea",
+   "zona": "XXI",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 51,
+   "j1_nombre": "Yolanda",
+   "j1_apellido1": "Torca",
+   "j2_nombre": "Zacarías",
+   "j2_apellido1": "Oronoz",
+   "corto": "Torca-Oronoz",
+   "zona": "TOR",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 52,
+   "j1_nombre": "Ximena",
+   "j1_apellido1": "Pedregal",
+   "j2_nombre": "Remedios",
+   "j2_apellido1": "Rebollar",
+   "corto": "Pedregal-Rebollar",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 53,
+   "j1_nombre": "Andrés",
+   "j1_apellido1": "Sotillo",
+   "j2_nombre": "Gonzalo",
+   "j2_apellido1": "Tejar",
+   "corto": "Sotillo-Tejar",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 54,
+   "j1_nombre": "Beatriz",
+   "j1_apellido1": "Viñal",
+   "j2_nombre": "Eulalio",
+   "j2_apellido1": "Collado",
+   "corto": "Viñal-Collado",
+   "zona": "MIX",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  }
+ ],
+ "sustituciones": [],
+ "clasificacion": [
+  {
+   "grupo": "A",
+   "puesto": 1,
+   "id": 38,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 0,
+   "dp": 2,
+   "tf": 600,
+   "tc": 223,
+   "dt": 377,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 2,
+   "id": 49,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 0,
+   "dp": 2,
+   "tf": 600,
+   "tc": 328,
+   "dt": 272,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 3,
+   "id": 22,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 0,
+   "dp": 2,
+   "tf": 600,
+   "tc": 332,
+   "dt": 268,
+   "pendiente": false,
+   "desempate": "C.I. con 51"
+  },
+  {
+   "grupo": "A",
+   "puesto": 4,
+   "id": 51,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 0,
+   "dp": 2,
+   "tf": 600,
+   "tc": 332,
+   "dt": 268,
+   "pendiente": false,
+   "desempate": "C.I. con 22"
+  },
+  {
+   "grupo": "A",
+   "puesto": 5,
+   "id": 52,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 0,
+   "dp": 2,
+   "tf": 600,
+   "tc": 371,
+   "dt": 229,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 6,
+   "id": 17,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 0,
+   "dp": 2,
+   "tf": 600,
+   "tc": 374,
+   "dt": 226,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 7,
+   "id": 36,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 0,
+   "dp": 2,
+   "tf": 600,
+   "tc": 382,
+   "dt": 218,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 8,
+   "id": 12,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 0,
+   "dp": 2,
+   "tf": 600,
+   "tc": 393,
+   "dt": 207,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 9,
+   "id": 21,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 0,
+   "dp": 2,
+   "tf": 600,
+   "tc": 394,
+   "dt": 206,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 10,
+   "id": 42,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 0,
+   "dp": 2,
+   "tf": 600,
+   "tc": 410,
+   "dt": 190,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 11,
+   "id": 27,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 0,
+   "dp": 2,
+   "tf": 600,
+   "tc": 446,
+   "dt": 154,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 12,
+   "id": 32,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 0,
+   "dp": 2,
+   "tf": 600,
+   "tc": 569,
+   "dt": 31,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 13,
+   "id": 13,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 868,
+   "tc": 508,
+   "dt": 360,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 14,
+   "id": 44,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 825,
+   "tc": 470,
+   "dt": 355,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 15,
+   "id": 25,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 869,
+   "tc": 620,
+   "dt": 249,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 16,
+   "id": 18,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 788,
+   "tc": 542,
+   "dt": 246,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 17,
+   "id": 19,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 830,
+   "tc": 630,
+   "dt": 200,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 18,
+   "id": 35,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 811,
+   "tc": 611,
+   "dt": 200,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 19,
+   "id": 1,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 809,
+   "tc": 622,
+   "dt": 187,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 20,
+   "id": 54,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 754,
+   "tc": 605,
+   "dt": 149,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 21,
+   "id": 5,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 863,
+   "tc": 755,
+   "dt": 108,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 22,
+   "id": 28,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 867,
+   "tc": 761,
+   "dt": 106,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 23,
+   "id": 34,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 748,
+   "tc": 650,
+   "dt": 98,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 24,
+   "id": 45,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 770,
+   "tc": 714,
+   "dt": 56,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 25,
+   "id": 37,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 770,
+   "tc": 751,
+   "dt": 19,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 26,
+   "id": 7,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 713,
+   "tc": 695,
+   "dt": 18,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 27,
+   "id": 26,
+   "jug": 1,
+   "gan": 1,
+   "pg": 2,
+   "pp": 1,
+   "dp": 1,
+   "tf": 769,
+   "tc": 802,
+   "dt": -33,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 28,
+   "id": 16,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 802,
+   "tc": 769,
+   "dt": 33,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 29,
+   "id": 47,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 695,
+   "tc": 713,
+   "dt": -18,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 30,
+   "id": 46,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 751,
+   "tc": 770,
+   "dt": -19,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 31,
+   "id": 9,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 714,
+   "tc": 770,
+   "dt": -56,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 32,
+   "id": 3,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 650,
+   "tc": 748,
+   "dt": -98,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 33,
+   "id": 31,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 761,
+   "tc": 867,
+   "dt": -106,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 34,
+   "id": 53,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 755,
+   "tc": 863,
+   "dt": -108,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 35,
+   "id": 10,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 605,
+   "tc": 754,
+   "dt": -149,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 36,
+   "id": 23,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 622,
+   "tc": 809,
+   "dt": -187,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 37,
+   "id": 15,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 630,
+   "tc": 830,
+   "dt": -200,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 38,
+   "id": 4,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 611,
+   "tc": 811,
+   "dt": -200,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 39,
+   "id": 50,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 542,
+   "tc": 788,
+   "dt": -246,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 40,
+   "id": 30,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 620,
+   "tc": 869,
+   "dt": -249,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 41,
+   "id": 48,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 470,
+   "tc": 825,
+   "dt": -355,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 42,
+   "id": 41,
+   "jug": 1,
+   "gan": 0,
+   "pg": 1,
+   "pp": 2,
+   "dp": -1,
+   "tf": 508,
+   "tc": 868,
+   "dt": -360,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 43,
+   "id": 29,
+   "jug": 1,
+   "gan": 0,
+   "pg": 0,
+   "pp": 2,
+   "dp": -2,
+   "tf": 569,
+   "tc": 600,
+   "dt": -31,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 44,
+   "id": 2,
+   "jug": 1,
+   "gan": 0,
+   "pg": 0,
+   "pp": 2,
+   "dp": -2,
+   "tf": 446,
+   "tc": 600,
+   "dt": -154,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 45,
+   "id": 11,
+   "jug": 1,
+   "gan": 0,
+   "pg": 0,
+   "pp": 2,
+   "dp": -2,
+   "tf": 410,
+   "tc": 600,
+   "dt": -190,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 46,
+   "id": 24,
+   "jug": 1,
+   "gan": 0,
+   "pg": 0,
+   "pp": 2,
+   "dp": -2,
+   "tf": 394,
+   "tc": 600,
+   "dt": -206,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 47,
+   "id": 6,
+   "jug": 1,
+   "gan": 0,
+   "pg": 0,
+   "pp": 2,
+   "dp": -2,
+   "tf": 393,
+   "tc": 600,
+   "dt": -207,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 48,
+   "id": 14,
+   "jug": 1,
+   "gan": 0,
+   "pg": 0,
+   "pp": 2,
+   "dp": -2,
+   "tf": 382,
+   "tc": 600,
+   "dt": -218,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 49,
+   "id": 39,
+   "jug": 1,
+   "gan": 0,
+   "pg": 0,
+   "pp": 2,
+   "dp": -2,
+   "tf": 374,
+   "tc": 600,
+   "dt": -226,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 50,
+   "id": 40,
+   "jug": 1,
+   "gan": 0,
+   "pg": 0,
+   "pp": 2,
+   "dp": -2,
+   "tf": 371,
+   "tc": 600,
+   "dt": -229,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 51,
+   "id": 20,
+   "jug": 1,
+   "gan": 0,
+   "pg": 0,
+   "pp": 2,
+   "dp": -2,
+   "tf": 332,
+   "tc": 600,
+   "dt": -268,
+   "pendiente": false,
+   "desempate": "C.I. con 33"
+  },
+  {
+   "grupo": "A",
+   "puesto": 52,
+   "id": 33,
+   "jug": 1,
+   "gan": 0,
+   "pg": 0,
+   "pp": 2,
+   "dp": -2,
+   "tf": 332,
+   "tc": 600,
+   "dt": -268,
+   "pendiente": false,
+   "desempate": "C.I. con 20"
+  },
+  {
+   "grupo": "A",
+   "puesto": 53,
+   "id": 8,
+   "jug": 1,
+   "gan": 0,
+   "pg": 0,
+   "pp": 2,
+   "dp": -2,
+   "tf": 328,
+   "tc": 600,
+   "dt": -272,
+   "pendiente": false,
+   "desempate": null
+  },
+  {
+   "grupo": "A",
+   "puesto": 54,
+   "id": 43,
+   "jug": 1,
+   "gan": 0,
+   "pg": 0,
+   "pp": 2,
+   "dp": -2,
+   "tf": 223,
+   "tc": 600,
+   "dt": -377,
+   "pendiente": false,
+   "desempate": null
+  }
+ ],
+ "emparejamientos": [
+  {
+   "grupo": "A",
+   "mesa": 1,
+   "mesa_grupo": 1,
+   "izq": [
+    27
+   ],
+   "dcha": [
+    2
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 0,
+   "t_izq": 600,
+   "t_dcha": 446
+  },
+  {
+   "grupo": "A",
+   "mesa": 2,
+   "mesa_grupo": 2,
+   "izq": [
+    29
+   ],
+   "dcha": [
+    32
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 0,
+   "p_dcha": 2,
+   "t_izq": 569,
+   "t_dcha": 600
+  },
+  {
+   "grupo": "A",
+   "mesa": 3,
+   "mesa_grupo": 3,
+   "izq": [
+    20
+   ],
+   "dcha": [
+    22
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 0,
+   "p_dcha": 2,
+   "t_izq": 332,
+   "t_dcha": 600
+  },
+  {
+   "grupo": "A",
+   "mesa": 4,
+   "mesa_grupo": 4,
+   "izq": [
+    28
+   ],
+   "dcha": [
+    31
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 1,
+   "t_izq": 867,
+   "t_dcha": 761
+  },
+  {
+   "grupo": "A",
+   "mesa": 5,
+   "mesa_grupo": 5,
+   "izq": [
+    50
+   ],
+   "dcha": [
+    18
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 1,
+   "p_dcha": 2,
+   "t_izq": 542,
+   "t_dcha": 788
+  },
+  {
+   "grupo": "A",
+   "mesa": 6,
+   "mesa_grupo": 6,
+   "izq": [
+    3
+   ],
+   "dcha": [
+    34
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 1,
+   "p_dcha": 2,
+   "t_izq": 650,
+   "t_dcha": 748
+  },
+  {
+   "grupo": "A",
+   "mesa": 7,
+   "mesa_grupo": 7,
+   "izq": [
+    10
+   ],
+   "dcha": [
+    54
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 1,
+   "p_dcha": 2,
+   "t_izq": 605,
+   "t_dcha": 754
+  },
+  {
+   "grupo": "A",
+   "mesa": 8,
+   "mesa_grupo": 8,
+   "izq": [
+    9
+   ],
+   "dcha": [
+    45
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 1,
+   "p_dcha": 2,
+   "t_izq": 714,
+   "t_dcha": 770
+  },
+  {
+   "grupo": "A",
+   "mesa": 9,
+   "mesa_grupo": 9,
+   "izq": [
+    15
+   ],
+   "dcha": [
+    19
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 1,
+   "p_dcha": 2,
+   "t_izq": 630,
+   "t_dcha": 830
+  },
+  {
+   "grupo": "A",
+   "mesa": 10,
+   "mesa_grupo": 10,
+   "izq": [
+    25
+   ],
+   "dcha": [
+    30
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 1,
+   "t_izq": 869,
+   "t_dcha": 620
+  },
+  {
+   "grupo": "A",
+   "mesa": 11,
+   "mesa_grupo": 11,
+   "izq": [
+    14
+   ],
+   "dcha": [
+    36
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 0,
+   "p_dcha": 2,
+   "t_izq": 382,
+   "t_dcha": 600
+  },
+  {
+   "grupo": "A",
+   "mesa": 12,
+   "mesa_grupo": 12,
+   "izq": [
+    37
+   ],
+   "dcha": [
+    46
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 1,
+   "t_izq": 770,
+   "t_dcha": 751
+  },
+  {
+   "grupo": "A",
+   "mesa": 13,
+   "mesa_grupo": 13,
+   "izq": [
+    17
+   ],
+   "dcha": [
+    39
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 0,
+   "t_izq": 600,
+   "t_dcha": 374
+  },
+  {
+   "grupo": "A",
+   "mesa": 14,
+   "mesa_grupo": 14,
+   "izq": [
+    38
+   ],
+   "dcha": [
+    43
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 0,
+   "t_izq": 600,
+   "t_dcha": 223
+  },
+  {
+   "grupo": "A",
+   "mesa": 15,
+   "mesa_grupo": 15,
+   "izq": [
+    6
+   ],
+   "dcha": [
+    12
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 0,
+   "p_dcha": 2,
+   "t_izq": 393,
+   "t_dcha": 600
+  },
+  {
+   "grupo": "A",
+   "mesa": 16,
+   "mesa_grupo": 16,
+   "izq": [
+    16
+   ],
+   "dcha": [
+    26
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 1,
+   "p_dcha": 2,
+   "t_izq": 802,
+   "t_dcha": 769
+  },
+  {
+   "grupo": "A",
+   "mesa": 17,
+   "mesa_grupo": 17,
+   "izq": [
+    1
+   ],
+   "dcha": [
+    23
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 1,
+   "t_izq": 809,
+   "t_dcha": 622
+  },
+  {
+   "grupo": "A",
+   "mesa": 18,
+   "mesa_grupo": 18,
+   "izq": [
+    35
+   ],
+   "dcha": [
+    4
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 1,
+   "t_izq": 811,
+   "t_dcha": 611
+  },
+  {
+   "grupo": "A",
+   "mesa": 19,
+   "mesa_grupo": 19,
+   "izq": [
+    21
+   ],
+   "dcha": [
+    24
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 0,
+   "t_izq": 600,
+   "t_dcha": 394
+  },
+  {
+   "grupo": "A",
+   "mesa": 20,
+   "mesa_grupo": 20,
+   "izq": [
+    11
+   ],
+   "dcha": [
+    42
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 0,
+   "p_dcha": 2,
+   "t_izq": 410,
+   "t_dcha": 600
+  },
+  {
+   "grupo": "A",
+   "mesa": 21,
+   "mesa_grupo": 21,
+   "izq": [
+    51
+   ],
+   "dcha": [
+    33
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 0,
+   "t_izq": 600,
+   "t_dcha": 332
+  },
+  {
+   "grupo": "A",
+   "mesa": 22,
+   "mesa_grupo": 22,
+   "izq": [
+    48
+   ],
+   "dcha": [
+    44
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 1,
+   "p_dcha": 2,
+   "t_izq": 470,
+   "t_dcha": 825
+  },
+  {
+   "grupo": "A",
+   "mesa": 23,
+   "mesa_grupo": 23,
+   "izq": [
+    7
+   ],
+   "dcha": [
+    47
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 1,
+   "t_izq": 713,
+   "t_dcha": 695
+  },
+  {
+   "grupo": "A",
+   "mesa": 24,
+   "mesa_grupo": 24,
+   "izq": [
+    40
+   ],
+   "dcha": [
+    52
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 0,
+   "p_dcha": 2,
+   "t_izq": 371,
+   "t_dcha": 600
+  },
+  {
+   "grupo": "A",
+   "mesa": 25,
+   "mesa_grupo": 25,
+   "izq": [
+    41
+   ],
+   "dcha": [
+    13
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 1,
+   "p_dcha": 2,
+   "t_izq": 508,
+   "t_dcha": 868
+  },
+  {
+   "grupo": "A",
+   "mesa": 26,
+   "mesa_grupo": 26,
+   "izq": [
+    49
+   ],
+   "dcha": [
+    8
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 0,
+   "t_izq": 600,
+   "t_dcha": 328
+  },
+  {
+   "grupo": "A",
+   "mesa": 27,
+   "mesa_grupo": 27,
+   "izq": [
+    5
+   ],
+   "dcha": [
+    53
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 2,
+   "p_dcha": 1,
+   "t_izq": 863,
+   "t_dcha": 755
+  }
+ ],
+ "calendario": [
+  {
+   "jornada": 1,
+   "jornada_b": null,
+   "desde": "2026-10-13",
+   "hasta": "2026-10-26"
+  },
+  {
+   "jornada": 2,
+   "jornada_b": null,
+   "desde": "2026-10-27",
+   "hasta": "2026-11-09"
+  },
+  {
+   "jornada": 3,
+   "jornada_b": null,
+   "desde": "2026-11-10",
+   "hasta": "2026-11-23"
+  },
+  {
+   "jornada": 4,
+   "jornada_b": null,
+   "desde": "2026-11-24",
+   "hasta": "2026-12-14"
+  },
+  {
+   "jornada": 5,
+   "jornada_b": null,
+   "desde": "2026-12-15",
+   "hasta": "2027-01-04"
+  },
+  {
+   "jornada": 6,
+   "jornada_b": null,
+   "desde": "2027-01-05",
+   "hasta": "2027-01-18"
+  },
+  {
+   "jornada": 7,
+   "jornada_b": null,
+   "desde": "2027-01-19",
+   "hasta": "2027-02-01"
+  },
+  {
+   "jornada": 8,
+   "jornada_b": null,
+   "desde": "2027-02-02",
+   "hasta": "2027-02-15"
+  },
+  {
+   "jornada": 9,
+   "jornada_b": null,
+   "desde": "2027-02-16",
+   "hasta": "2027-03-01"
+  },
+  {
+   "jornada": 10,
+   "jornada_b": null,
+   "desde": "2027-03-02",
+   "hasta": "2027-03-22"
+  },
+  {
+   "jornada": 11,
+   "jornada_b": null,
+   "desde": "2027-03-23",
+   "hasta": "2027-04-12"
+  },
+  {
+   "jornada": 12,
+   "jornada_b": null,
+   "desde": "2027-04-13",
+   "hasta": "2027-04-26"
+  },
+  {
+   "jornada": 13,
+   "jornada_b": null,
+   "desde": "2027-04-27",
+   "hasta": "2027-05-10"
+  },
+  {
+   "jornada": 14,
+   "jornada_b": null,
+   "desde": "2027-05-11",
+   "hasta": "2027-05-24"
+  }
+ ]
+}

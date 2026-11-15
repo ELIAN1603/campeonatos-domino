@@ -1,4 +1,4 @@
-/* tu mesa · web pública. Lee los JSON del contrato (datos/…) y pinta todo como texto. */
+/* tu mesa · web pública. Lee los JSON del contrato (datos/…), cifrados con la contraseña de la web (assets/cifra.js), y pinta todo como texto. */
 (function () {
   'use strict';
 
@@ -67,21 +67,88 @@
     const s = p.toString();
     return pagina + (s ? '?' + s : '');
   }
+  // Todo lo publicado es un sobre cifrado: sin la clave no se lee nada, y un archivo en claro no se acepta.
+  let CLAVE = null;
+  async function leerSobre(ruta, fresco) {
+    const r = await fetch(ruta, fresco ? { cache: 'no-cache' } : undefined);
+    if (!r.ok) throw new Error(ruta + ' ' + r.status);
+    return Cifra.descifrar(CLAVE, await r.json());
+  }
   async function leer(ruta, fresco) {
     if (BORRADOR) {
       const f = await window.Mesa.leer('borr', ruta.split('?')[0]);
       if (!f) throw new Error(ruta + ' 404');
       return f.json;
     }
-    const r = await fetch(ruta, fresco ? { cache: 'no-cache' } : undefined);
-    if (!r.ok) throw new Error(ruta + ' ' + r.status);
-    return r.json();
+    return JSON.parse(new TextDecoder().decode(await leerSobre(ruta, fresco)));
   }
   const rutaJornada = (id, n, v) => `${BASE}/${id}/jornada_${pad(n)}.json` + (v ? '?v=' + encodeURIComponent(v) : '');
 
   function bandaPrueba() {
     if (!ES_PRUEBA) return;
     document.body.prepend(el('div', { class: 'banda-prueba' }, 'Datos de prueba: ningún campeonato de esta página existe de verdad.'));
+  }
+
+  /* ---------- contraseña ---------- */
+  // Mientras no hay clave, «main» enseña solo el candado; al abrir, vuelve lo que había.
+  let tapado = null;
+  function candado(...kids) {
+    const main = $('main');
+    if (!tapado) tapado = [...main.childNodes];
+    const bus = $('.buscador'); if (bus) bus.hidden = true;
+    poner(main, el('section', { id: 'candado', class: 'candado', 'aria-labelledby': 't-candado' }, kids));
+  }
+  function destapar() {
+    if (tapado) $('main').replaceChildren(...tapado);
+    tapado = null;
+    const bus = $('.buscador'); if (bus) bus.hidden = false;
+    const pie = $('.pie-in');
+    if (pie && !$('#olvidar-clave')) {
+      pie.append(el('p', null, el('button', { type: 'button', id: 'olvidar-clave', class: 'boton sec', onclick: () => { Cifra.olvidarClave(BASE); location.reload(); } }, 'Olvidar contraseña en este dispositivo')));
+    }
+  }
+  function pantallaClave(cj, cambio, listo) {
+    const campo = el('input', { id: 'clave', type: 'password', autocomplete: 'current-password', autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false', required: true });
+    const recordar = el('input', { id: 'recordar', type: 'checkbox', checked: true });
+    const msg = el('p', { id: 'clave-msg', class: 'nota', 'aria-live': 'polite' });
+    const boton = el('button', { type: 'submit', class: 'boton' }, 'Entrar');
+    const form = el('form', { id: 'form-clave' },
+      el('label', { for: 'clave' }, 'Contraseña'), campo,
+      el('label', { class: 'opcion' }, recordar, el('span', null, 'Recordar en este dispositivo')),
+      el('p', { class: 'nota sin-margen' }, 'Si este móvil u ordenador lo usa más gente, desmarca la casilla y la web te la volverá a pedir al cerrar la pestaña.'),
+      el('div', { class: 'acciones' }, boton), msg);
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      boton.disabled = true; msg.className = 'nota'; msg.textContent = 'Comprobando…';
+      let k = null;
+      try { k = await Cifra.abrir(campo.value.trim(), cj); } catch (e) { k = null; }
+      if (!k) {
+        msg.className = 'nota caja'; msg.textContent = 'Esa contraseña no es la correcta. Revísala y vuelve a probar.';
+        boton.disabled = false; campo.select(); return;
+      }
+      await Cifra.guardarClave(BASE, k, recordar.checked);
+      CLAVE = k; destapar(); listo(true);
+    });
+    candado(el('h2', { id: 't-candado' }, 'Esta web tiene contraseña'),
+      el('p', null, cambio ? 'La contraseña de la web ha cambiado. Escribe la nueva.' : 'Los resultados solo los ven los jugadores. Escribe la contraseña que te ha dado la mesa de control.'),
+      form);
+    campo.focus();
+  }
+  /* Resuelve true cuando hay clave (guardada o recién escrita). Sin datos/clave.json, la web aún no está cifrada: no enseña nada. */
+  async function desbloquear() {
+    let cj = null;
+    try {
+      const r = await fetch(`${BASE}/clave.json?t=${Math.floor(Date.now() / 60000)}`, { cache: 'no-cache' }); // ?t= salta la caché de Pages tras un cambio de contraseña
+      if (r.ok) cj = await r.json(); else if (r.status !== 404) throw new Error(String(r.status));
+    } catch (e) {
+      candado(el('p', { class: 'aviso alerta' }, 'No se ha podido abrir la web. Comprueba la conexión y prueba otra vez dentro de un minuto.'));
+      return false;
+    }
+    if (!cj) { candado(el('h2', { id: 't-candado' }, 'Estamos preparando la web'), el('p', null, 'Vuelve a entrar dentro de un rato.')); return false; }
+    const guardada = await Cifra.cargarClave(BASE);
+    if (guardada && await Cifra.comprobar(guardada, cj)) { CLAVE = guardada; destapar(); return true; }
+    if (guardada) Cifra.olvidarClave(BASE);
+    return new Promise((listo) => pantallaClave(cj, !!guardada, listo));
   }
 
   /* ---------- nombres ---------- */
@@ -477,9 +544,29 @@
         el('span', { class: 'fechas' }, rango(c))))));
   }
 
-  function pintarFolleto(cont) {
+  // La normativa (datos/<id>/normativa.pdf.cifrado) se descifra aquí y se descarga como archivo: sin iframe ni visor.
+  async function descargarNormativa(boton, aviso) {
+    boton.disabled = true; aviso.textContent = 'Preparando el PDF…';
+    try {
+      const bytes = await leerSobre(`${BASE}/${E.id}/normativa.pdf.cifrado`, true);
+      const dir = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+      const a = document.createElement('a'); // el() no acepta direcciones blob:
+      a.href = dir; a.download = `normativa-${E.id}.pdf`; document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(dir), 60000);
+      aviso.textContent = '';
+    } catch (e) { aviso.textContent = 'No se ha podido descargar la normativa. Prueba otra vez dentro de un minuto.'; }
+    boton.disabled = false;
+  }
+  async function pintarFolleto(cont) {
+    // ¿hay normativa? Se pregunta una vez y solo al abrir Calendario (un 404 aquí es lo normal: el campeonato no tiene)
+    E.normativa = E.normativa || (BORRADOR ? Promise.resolve(false) : fetch(`${BASE}/${E.id}/normativa.pdf.cifrado`, { method: 'HEAD', cache: 'no-cache' }).then((r) => r.ok, () => false));
+    const hay = await E.normativa;
+    if (E.ver !== 'folleto') return;
     const filas = filasCalendario(E.actual);
-    poner(cont, !filas.length ? el('p', { class: 'vacio' }, 'Este campeonato no tiene calendario publicado.') : calLista(E.actual, filas));
+    const aviso = el('p', { class: 'nota sin-margen', 'aria-live': 'polite' });
+    const boton = hay ? el('button', { type: 'button', class: 'boton', onclick: () => descargarNormativa(boton, aviso) }, 'Descargar normativa (PDF)') : null;
+    poner(cont, hay ? el('div', { class: 'acciones normativa' }, boton, aviso) : null,
+      !filas.length ? el('p', { class: 'vacio' }, 'Este campeonato no tiene calendario publicado.') : calLista(E.actual, filas));
   }
 
   /* ----- orquestación ----- */
@@ -492,7 +579,7 @@
     if (E.ver === 'clasificacion') await pintarClasificacion(cont);
     else if (E.ver === 'mesas') await pintarMesas(cont);
     else if (E.ver === 'parejas') pintarParejas(cont);
-    else pintarFolleto(cont);
+    else await pintarFolleto(cont);
   }
 
   async function sondear() {
@@ -529,9 +616,10 @@
 
   window.TuMesa = { el, poner, instante, TIPOS, ESTADOS };
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     bandaPrueba();
     const pagina = document.body.dataset.pagina;
+    if ((pagina === 'portada' || pagina === 'torneo') && !BORRADOR && !(await desbloquear())) return;
     if (pagina === 'portada') portada();
     else if (pagina === 'torneo') torneo();
     document.querySelectorAll('a[data-conservar]').forEach((x) => { if (ES_PRUEBA) x.href = url(x.getAttribute('href')); });

@@ -3,7 +3,8 @@
 const fs = require('fs'), os = require('os'), path = require('path');
 const { execFileSync } = require('child_process');
 const { chromium } = require('playwright');
-const { instalar, sembrar, TOKEN } = require('./api_simulada.cjs');
+const { instalar, sembrar, recordarWeb, TOKEN } = require('./api_simulada.cjs');
+const { CONTRASENA_PRUEBA, recordarPrueba } = require('./cripto_prueba.cjs');
 const base = process.argv[2] || 'http://localhost:8765';
 const capt = process.argv[3];
 const raiz = path.join(__dirname, '..');
@@ -26,8 +27,8 @@ function revisar() {
     // (b) datos ocultos
     if (conTexto && (s.display === 'none' || s.visibility === 'hidden') && !e.closest('[hidden]')) fallos.push('(b) oculto con datos: ' + nombre(e).replace(/ «.*»$/, ''));
     if (s.display === 'none') continue;
-    // (c) overflow hidden/clip que recorta
-    if (/hidden|clip/.test(s.overflowX + s.overflowY) && (e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1))
+    // (c) overflow hidden/clip que recorta. Un campo de contraseña no enseña datos (son puntos): lo largo se desplaza dentro, como en cualquier campo.
+    if (/hidden|clip/.test(s.overflowX + s.overflowY) && !(e.tagName === 'INPUT' && e.type === 'password') && (e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1))
       fallos.push(`(c) recorta (${e.scrollWidth}x${e.scrollHeight} en ${e.clientWidth}x${e.clientHeight}): ` + nombre(e));
     // (f) el contenido se sale de su caja sin que haya desplazamiento
     if (!scroller(e) && s.display !== 'inline' && s.display !== 'contents' && !/table-(row|column)/.test(s.display) && e.clientWidth && e.scrollWidth > e.clientWidth + 1 && !/hidden|clip/.test(s.overflowX))
@@ -71,7 +72,7 @@ function llegaATC() {
   const fallos = []; let n = 0;
   const xl = fs.mkdtempSync(path.join(os.tmpdir(), 'tumesa-disp-'));
   const excel = path.join(xl, 'largos.xlsx');
-  execFileSync('python3', [path.join(__dirname, 'hacer_xlsx.py'), path.join(raiz, 'datos/_prueba/nombres-largos/actual.json'), excel]);
+  execFileSync('python3', [path.join(__dirname, 'hacer_xlsx.py'), path.join(__dirname, 'datos/nombres-largos/actual.json'), excel]);
 
   for (const [w, h] of TAMANOS) {
     const ctx = await b.newContext({ viewport: { width: w, height: h } });
@@ -82,18 +83,29 @@ function llegaATC() {
       for (const x of f) fallos.push(`${w}x${h} · ${donde} · ${x}`);
     };
 
-    await pg.goto(`${base}/index.html?${D}`); await pg.waitForSelector('.tarjeta');
+    // pantalla de contraseña, sin clave en el dispositivo: vacía, con el error y en un campeonato; después se escribe la buena
+    await pg.goto(`${base}/index.html?${D}`); await pg.waitForSelector('#form-clave');
+    await mira('contraseña · portada');
+    await pg.fill('#clave', 'una contraseña que no es la buena y además muy larga'); await pg.click('#form-clave button[type=submit]');
+    await pg.waitForSelector('#clave-msg.caja'); await mira('contraseña · errónea');
+    await pg.goto(`${base}/torneo.html?t=nombres-largos&${D}`); await pg.waitForSelector('#form-clave');
+    await mira('contraseña · campeonato');
+    await pg.goto(`${base}/index.html`); await pg.waitForSelector('#candado'); await mira('web real · candado o «preparando»');
+    await pg.goto(`${base}/index.html?${D}`); await pg.waitForSelector('#form-clave');
+    await pg.fill('#clave', CONTRASENA_PRUEBA); await pg.click('#form-clave button[type=submit]');
+    await pg.waitForSelector('.tarjeta');
     await mira('portada');
+    await mira('portada · botón «Olvidar contraseña»', () => (document.querySelector('#olvidar-clave') && document.querySelector('#olvidar-clave').offsetParent ? [] : ['falta el botón «Olvidar contraseña en este dispositivo»']));
     await pg.fill('#buscar', 'pons'); await pg.waitForSelector('.persona .puesto:not(:text("…"))'); await pg.waitForTimeout(200);
     await mira('portada · buscador');
     await pg.fill('#buscar', 'zzzz'); await pg.waitForSelector('text=No hay nadie'); await mira('portada · sin resultados');
 
-    for (const [t, q] of [['sp-2026-27', ''], ['nombres-largos', D + '&']]) {
+    for (const [t, q] of [['sp-grande', D + '&'], ['nombres-largos', D + '&'], ['sp-ejemplo', D + '&']]) {
       for (const ver of PESTANAS) {
         await pg.goto(`${base}/torneo.html?${q}t=${t}${ver ? '&ver=' + ver : ''}`);
         await pg.waitForSelector(ver === 'folleto' ? '.calendario, .vacio' : ver === 'parejas' ? '.lista-parejas' : ver === 'mesas' ? '.mesa' : 'table.clasi');
         await mira(`${t} · ${ver || 'clasificación'}`, !ver ? llegaATC : null);
-        if (capt && t === 'sp-2026-27' && !ver && (w === 360 || w === 390)) {
+        if (capt && t === 'sp-grande' && !ver && (w === 360 || w === 390)) {
           fs.mkdirSync(capt, { recursive: true });
           await pg.evaluate(() => document.querySelector('.tabla-marco').scrollIntoView());
           await pg.screenshot({ path: `${capt}/clasificacion_24_${w}_inicio.png` });
@@ -106,8 +118,9 @@ function llegaATC() {
 
     // mesa de control: listas de la web y de borradores (con nombres largos), cada panel de acción, el Excel con destino, un fallo a mitad y un borrador
     const api = await instalar(ctx);
-    api.poner('web', 'datos/indice.json', JSON.stringify({ version: '1.0', publicado: '2026-01-01T00:00:00Z', torneos: [] }));
-    sembrar(api, 'web', 'sp-ejemplo'); sembrar(api, 'web', 'nombres-largos');
+    await recordarWeb(ctx);
+    api.ponerCifrado('datos/indice.json', JSON.stringify({ version: '1.0', publicado: '2026-01-01T00:00:00Z', torneos: [] }));
+    sembrar(api, 'web', 'sp-ejemplo', { normativa: true }); sembrar(api, 'web', 'nombres-largos');
     sembrar(api, 'borr', 'parejas-ejemplo-2026-11-14'); sembrar(api, 'borr', 'individual-ejemplo-2026-11-14');
     await pg.goto(`${base}/publicar.html`);
     await pg.waitForSelector('#lista-web');
@@ -115,6 +128,14 @@ function llegaATC() {
     await pg.fill('#token', TOKEN); await pg.click('text=Guardar y comprobar'); await pg.waitForSelector('text=Hay un token guardado');
     await pg.waitForSelector('#lista-web[data-listo]'); await pg.waitForSelector('#lista-borr[data-listo]');
     await mira('mesa · listas');
+    await pg.click('#clave-estado button:text-is("Cambiar la contraseña")'); await pg.waitForSelector('#nueva-clave');
+    await mira('mesa · cambiar la contraseña');
+    await pg.fill('#nueva-clave', 'corta'); await mira('mesa · contraseña demasiado corta');
+    await pg.click('#panel-clave button:text-is("Cancelar")');
+    await pg.locator('#lista-web li.torneo[data-id="nombres-largos"] .acciones button:text-is("Subir normativa (PDF)")').click();
+    await pg.waitForSelector('#lista-web li.torneo[data-id="nombres-largos"] .panel input[type=file]'); await mira('mesa · subir normativa');
+    await pg.locator('#lista-web li.torneo[data-id="sp-ejemplo"] .acciones button:text-is("Quitar normativa")').click();
+    await pg.waitForSelector('#lista-web li.torneo[data-id="sp-ejemplo"] .aviso-accion'); await mira('mesa · quitar normativa');
     const abre = async (lista, id, accion, espera) => { await pg.locator(`#lista-${lista} li.torneo[data-id="${id}"] .acciones button:text-is("${accion}")`).click(); await pg.waitForSelector(`#lista-${lista} li.torneo[data-id="${id}"] ${espera}`); };
     await abre('web', 'nombres-largos', 'Editar', '#ed-nombre'); await mira('mesa · editar');
     await pg.fill('#ed-nombre', 'ab'); await pg.click('#lista-web .panel button:text-is("Guardar cambios")'); await mira('mesa · editar con error');

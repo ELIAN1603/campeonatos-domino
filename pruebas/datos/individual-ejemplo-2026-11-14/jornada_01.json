@@ -1,0 +1,301 @@
+{
+ "version": "1.0",
+ "publicado": "2026-11-14T16:10:00Z",
+ "torneo": {
+  "id": "individual-ejemplo-2026-11-14",
+  "nombre": "CAMPEONATO INDIVIDUAL DE EJEMPLO",
+  "organizador": "Asociación de ejemplo",
+  "tipo": "individual",
+  "temporada": null,
+  "fecha": "2026-11-14",
+  "lugar": "Sala de ejemplo",
+  "n_jornadas": 16,
+  "tantos_meta": 300,
+  "puntos_ausencia": 150,
+  "n_participantes": 8,
+  "hay_b": false,
+  "jornada_b": null,
+  "n_b": null,
+  "estado": "en_juego",
+  "contacto": "Jesús Eduardo Elián C.",
+  "normativa_url": null,
+  "criterios": [
+   "Partidas ganadas",
+   "Diferencia de tantos",
+   "Tantos a favor",
+   "Enfrentamiento directo (solo si fueron rivales)",
+   "Criterio informático"
+  ]
+ },
+ "jornada": {
+  "numero": 1,
+  "completa": true,
+  "mesas_pendientes": 0,
+  "sorteo": "A",
+  "sin_sortear": false,
+  "emparejamiento": "fijado",
+  "plazo_desde": null,
+  "plazo_hasta": null
+ },
+ "participantes": [
+  {
+   "id": 1,
+   "j1_nombre": "Pere",
+   "j1_apellido1": "Alcalá",
+   "j2_nombre": null,
+   "j2_apellido1": null,
+   "corto": "Pere Alcalá",
+   "zona": "Norte",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 2,
+   "j1_nombre": "Elvira",
+   "j1_apellido1": "Gimeno",
+   "j2_nombre": null,
+   "j2_apellido1": null,
+   "corto": "Elvira Gimeno",
+   "zona": "Sur",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 3,
+   "j1_nombre": "Rafa",
+   "j1_apellido1": "Montes",
+   "j2_nombre": null,
+   "j2_apellido1": null,
+   "corto": "Rafa Montes",
+   "zona": "Norte",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 4,
+   "j1_nombre": "Lola",
+   "j1_apellido1": "Sanchis",
+   "j2_nombre": null,
+   "j2_apellido1": null,
+   "corto": "Lola Sanchis",
+   "zona": "Ribera",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 5,
+   "j1_nombre": "Nacho",
+   "j1_apellido1": "Ferri",
+   "j2_nombre": null,
+   "j2_apellido1": null,
+   "corto": "Nacho Ferri",
+   "zona": "Sur",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 6,
+   "j1_nombre": "Aitana",
+   "j1_apellido1": "Cebrián",
+   "j2_nombre": null,
+   "j2_apellido1": null,
+   "corto": "Aitana Cebrián",
+   "zona": "Norte",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 7,
+   "j1_nombre": "Hugo",
+   "j1_apellido1": "Lorente",
+   "j2_nombre": null,
+   "j2_apellido1": null,
+   "corto": "Hugo Lorente",
+   "zona": "Ribera",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  },
+  {
+   "id": 8,
+   "j1_nombre": "Maite",
+   "j1_apellido1": "Roca",
+   "j2_nombre": null,
+   "j2_apellido1": null,
+   "corto": "Maite Roca",
+   "zona": "Sur",
+   "grupo": "A",
+   "ret": false,
+   "ret_desde": null
+  }
+ ],
+ "sustituciones": [],
+ "clasificacion": [
+  {
+   "grupo": "A",
+   "puesto": 1,
+   "id": 8,
+   "jug": 1,
+   "gan": 1,
+   "pg": null,
+   "pp": null,
+   "dp": null,
+   "tf": 300,
+   "tc": 220,
+   "dt": 80,
+   "pendiente": false,
+   "desempate": "C.I. con 3"
+  },
+  {
+   "grupo": "A",
+   "puesto": 2,
+   "id": 3,
+   "jug": 1,
+   "gan": 1,
+   "pg": null,
+   "pp": null,
+   "dp": null,
+   "tf": 300,
+   "tc": 220,
+   "dt": 80,
+   "pendiente": false,
+   "desempate": "C.I. con 8"
+  },
+  {
+   "grupo": "A",
+   "puesto": 3,
+   "id": 6,
+   "jug": 1,
+   "gan": 1,
+   "pg": null,
+   "pp": null,
+   "dp": null,
+   "tf": 300,
+   "tc": 230,
+   "dt": 70,
+   "pendiente": false,
+   "desempate": "C.I. con 1"
+  },
+  {
+   "grupo": "A",
+   "puesto": 4,
+   "id": 1,
+   "jug": 1,
+   "gan": 1,
+   "pg": null,
+   "pp": null,
+   "dp": null,
+   "tf": 300,
+   "tc": 230,
+   "dt": 70,
+   "pendiente": false,
+   "desempate": "C.I. con 6"
+  },
+  {
+   "grupo": "A",
+   "puesto": 5,
+   "id": 2,
+   "jug": 1,
+   "gan": 0,
+   "pg": null,
+   "pp": null,
+   "dp": null,
+   "tf": 230,
+   "tc": 300,
+   "dt": -70,
+   "pendiente": false,
+   "desempate": "C.I. con 4"
+  },
+  {
+   "grupo": "A",
+   "puesto": 6,
+   "id": 4,
+   "jug": 1,
+   "gan": 0,
+   "pg": null,
+   "pp": null,
+   "dp": null,
+   "tf": 230,
+   "tc": 300,
+   "dt": -70,
+   "pendiente": false,
+   "desempate": "C.I. con 2"
+  },
+  {
+   "grupo": "A",
+   "puesto": 7,
+   "id": 5,
+   "jug": 1,
+   "gan": 0,
+   "pg": null,
+   "pp": null,
+   "dp": null,
+   "tf": 220,
+   "tc": 300,
+   "dt": -80,
+   "pendiente": false,
+   "desempate": "C.I. con 7"
+  },
+  {
+   "grupo": "A",
+   "puesto": 8,
+   "id": 7,
+   "jug": 1,
+   "gan": 0,
+   "pg": null,
+   "pp": null,
+   "dp": null,
+   "tf": 220,
+   "tc": 300,
+   "dt": -80,
+   "pendiente": false,
+   "desempate": "C.I. con 5"
+  }
+ ],
+ "emparejamientos": [
+  {
+   "grupo": "A",
+   "mesa": 1,
+   "mesa_grupo": 1,
+   "izq": [
+    6,
+    1
+   ],
+   "dcha": [
+    2,
+    4
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 1,
+   "p_dcha": 0,
+   "t_izq": 300,
+   "t_dcha": 230
+  },
+  {
+   "grupo": "A",
+   "mesa": 2,
+   "mesa_grupo": 2,
+   "izq": [
+    8,
+    3
+   ],
+   "dcha": [
+    5,
+    7
+   ],
+   "estado": "jugada",
+   "ausentes": [],
+   "p_izq": 1,
+   "p_dcha": 0,
+   "t_izq": 300,
+   "t_dcha": 220
+  }
+ ]
+}

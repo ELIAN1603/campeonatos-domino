@@ -3,6 +3,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const { chromium } = require('playwright');
+const { recordarPrueba } = require('./cripto_prueba.cjs');
 const base = process.argv[2] || 'http://localhost:8765';
 const capt = process.argv[3];
 const D = 'd=datos/_prueba';
@@ -11,8 +12,9 @@ const D = 'd=datos/_prueba';
   let ok = 0; const bien = (t) => { ok++; console.log('  ok  ' + t); };
   for (const [w, h] of [[390, 844], [1280, 900]]) {
     const ctx = await b.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: w < 500 ? 2 : 1 });
+    await recordarPrueba(ctx); // como si ya se hubiera escrito la contraseña de los datos de prueba
     const pg = await ctx.newPage();
-    const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => m.type() === 'error' && errs.push(m.text()));
+    const errs = []; pg.on('pageerror', (e) => errs.push(e.message)); pg.on('console', (m) => m.type() === 'error' && !/(normativa\.pdf\.cifrado|\/datos\/clave\.json(\?t=\d+)?)$/.test(m.location().url) && errs.push(m.text())); // 404 esperados: campeonato sin normativa; web real aún sin contraseña
     const sinDesborde = async (n) => assert.strictEqual(await pg.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'desborda: ' + n);
     console.log(`A ${w} px`);
 
@@ -55,7 +57,7 @@ const D = 'd=datos/_prueba';
     assert(!/Cómo se ordena|criterio|desempate/i.test(await pg.locator('main').innerText()));
     assert.deepStrictEqual(await pg.locator('nav.pestanas a').allInnerTexts(), ['Clasificación', 'Partidas', 'Parejas', 'Calendario']);
     bien('clasificación: nota sin recuento, fechas de juego, sin criterios y cuatro pestañas en orden');
-    const pendJ3 = JSON.parse(fs.readFileSync('datos/_prueba/sp-ejemplo/actual.json', 'utf8')).clasificacion.filter((r) => r.grupo === 'A' && r.pendiente).length;
+    const pendJ3 = JSON.parse(fs.readFileSync('pruebas/datos/sp-ejemplo/actual.json', 'utf8')).clasificacion.filter((r) => r.grupo === 'A' && r.pendiente).length;
     assert.strictEqual(await pg.locator('table.clasi .etq.pend').count(), pendJ3); // ⏳ = pendiente del JSON
     assert.strictEqual(await pg.locator('.jornadas button').count(), 3); // las completas y la que está en juego
     await sinDesborde('clasificación SP'); bien(`clasificación en vivo de la J3 con ⏳ en las ${pendJ3} parejas sin resultado`);
@@ -136,7 +138,7 @@ const D = 'd=datos/_prueba';
     // parejas: nº, nombres, zona; nunca teléfonos
     await pg.click('nav.pestanas a:has-text("Parejas")');
     await pg.waitForSelector('table.lista-parejas');
-    const ap = JSON.parse(fs.readFileSync('datos/_prueba/sp-ejemplo/actual.json', 'utf8')).participantes;
+    const ap = JSON.parse(fs.readFileSync('pruebas/datos/sp-ejemplo/actual.json', 'utf8')).participantes;
     assert.strictEqual(await pg.locator('table.lista-parejas tbody tr').count(), ap.length);
     const f1 = await pg.locator('table.lista-parejas tbody tr').first().innerText();
     assert(f1.includes(`${ap[0].j1_nombre} ${ap[0].j1_apellido1}`) && f1.includes(`${ap[0].j2_nombre} ${ap[0].j2_apellido1}`) && f1.includes(ap[0].zona), f1);
@@ -157,12 +159,12 @@ const D = 'd=datos/_prueba';
     assert.strictEqual(await pg.locator('a[download], iframe').count(), 0, 'sin PDF de normativa');
     await sinDesborde('calendario lista'); bien('lista: 14 jornadas con el año, B1-B3, J3 resaltada');
     if (capt) await pg.screenshot({ path: `${capt}/cal_lista_${w}.png`, fullPage: true });
-    // la lista no se toca: el 24º real, con el año en la jornada que cruza
-    await pg.goto(`${base}/torneo.html?t=sp-2026-27&ver=folleto`); await pg.waitForSelector('.calendario li');
+    // la lista no se toca: la copia del 24º con nombres inventados, con el año en la jornada que cruza
+    await pg.goto(`${base}/torneo.html?t=sp-grande&ver=folleto&${D}`); await pg.waitForSelector('.calendario li');
     assert.strictEqual(await pg.locator('.calendario li').count(), 14);
     assert((await pg.locator('.calendario li').nth(4).innerText()).includes('15/12/2026 – 4/1/2027'), 'jornada que cruza de año');
     assert((await pg.locator('.calendario li').nth(0).innerText()).includes('13/10 – 26/10/2026'));
-    await sinDesborde('24º calendario (lista)'); bien('Calendario (lista) intacto con el 24º real: «15/12/2026 – 4/1/2027» en la J5');
+    await sinDesborde('24º calendario (lista)'); bien('Calendario (lista) intacto con la copia del 24º: «15/12/2026 – 4/1/2027» en la J5');
     assert.deepStrictEqual(errs, [], 'la consola no debe mostrar violaciones de la CSP ni errores'); errs.length = 0;
     bien('consola limpia en el calendario (sin violaciones de CSP)');
     await pg.clock.setFixedTime(new Date('2026-11-15T10:00:00'));
@@ -205,10 +207,10 @@ const D = 'd=datos/_prueba';
     await pg.waitForSelector('li.mesa'); assert.strictEqual(await pg.locator('li.mesa').first().locator('.lado .n').count(), 4);
     assert.strictEqual(await pg.locator('nav.pestanas a').nth(2).innerText(), 'Jugadores');
     await sinDesborde('individual'); bien('individual: 2 jugadores contra 2');
-    // el 24º real: un botón por jornada publicada (según actual.json), y se abre la jornada en curso
-    const act24 = JSON.parse(require('fs').readFileSync('datos/sp-2026-27/actual.json', 'utf8'));
+    // la copia del 24º: un botón por jornada publicada (según actual.json), y se abre la jornada en curso
+    const act24 = JSON.parse(require('fs').readFileSync('pruebas/datos/sp-grande/actual.json', 'utf8'));
     const nPub = (act24.jornadas || [act24.jornada]).length;
-    await pg.goto(`${base}/torneo.html?t=sp-2026-27`);
+    await pg.goto(`${base}/torneo.html?t=sp-grande&${D}`);
     await pg.waitForSelector('table.clasi');
     assert.strictEqual(await pg.locator('.jornadas button').count(), nPub);
     await pg.click('nav.pestanas a:has-text("Partidas")');
@@ -216,7 +218,7 @@ const D = 'd=datos/_prueba';
     assert.strictEqual(await pg.locator('.jornadas button').count(), nPub);
     assert.strictEqual(await pg.locator('.jornadas button[aria-pressed=true]').innerText(), String(act24.jornada.numero));
     assert((await pg.locator('li.mesa').count()) >= 20);
-    await sinDesborde('24º mesas'); bien(`24º real: ${nPub} botones, se abre la J${act24.jornada.numero}, mesas con tarjeta, sin desbordar`);
+    await sinDesborde('24º mesas'); bien(`copia del 24º: ${nPub} botones, se abre la J${act24.jornada.numero}, mesas con tarjeta, sin desbordar`);
     if (capt) await pg.screenshot({ path: `${capt}/real_${w}.png`, fullPage: true });
     // enlace del buscador resalta la fila
     await pg.goto(`${base}/torneo.html?t=sp-ejemplo&ver=mesas&p=3&${D}`);
@@ -225,12 +227,12 @@ const D = 'd=datos/_prueba';
     // inexistente (el 404 es lo esperado)
     await pg.goto(`${base}/torneo.html?t=no-existe&${D}`);
     await pg.waitForSelector('text=No se ha encontrado este campeonato'); bien('campeonato inexistente: mensaje llano'); errs.length = 0;
-    // sin ?d= : datos reales
+    // sin ?d= : datos reales, cifrados con otra contraseña (o aún sin cifrar): candado y sin banda de prueba
     await pg.goto(`${base}/index.html`);
-    await pg.waitForSelector('.tarjeta');
+    await pg.waitForSelector('#candado');
     assert.strictEqual(await pg.locator('.banda-prueba').count(), 0);
-    assert.strictEqual(await pg.locator('.fecha-ficha').count(), 0);
-    bien('portada real: sin banda de prueba y sin fecha de inicio');
+    assert.strictEqual(await pg.locator('.tarjeta, .fecha-ficha').count(), 0);
+    bien('portada real: candado, sin banda de prueba y sin tarjetas');
     assert.deepStrictEqual(errs, []);
     await ctx.close();
   }
