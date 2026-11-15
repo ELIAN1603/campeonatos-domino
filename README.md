@@ -71,7 +71,7 @@ python3 -I <programas-domino>/tools/comun/web_export.py libro.xlsx /tmp/web --pu
 node pruebas/probar_excel_real.cjs libro.xlsx /tmp/web/<id>/jornada_NN.json
 ```
 
-Resultado con los entregables de W2b (14/11/2026), sin cambiar `publicar.html` ni la web. El 15/11/2026 (P3b) salió igual, 11 comprobaciones bien, con `DEMO_XXVI_Benimaclet_sin_macros.xlsx` (parejas, 74 parejas con grupo B) y con `DEMO_Individual_sin_macros.xlsx` (individual, 112 jugadores). Con los casos de prueba de parejas (S2–S5, S7) y de individual (I2) pasa la parte de Node con `--ficticio`.
+Resultado con los entregables de W2b (14/11/2026), sin cambiar `publicar.html` ni la web. El 15/11/2026 (P3b) salió igual, 11 comprobaciones bien, con `DEMO_XXVI_Benimaclet_sin_macros_version_web.xlsx` (parejas, 74 parejas con grupo B) y con `DEMO_Individual_sin_macros_version_web.xlsx` (individual, 112 jugadores). Con los casos de prueba de parejas (S2–S5, S7) y de individual (I2) pasa la parte de Node con `--ficticio`.
 
 1. Valores guardados, vacíos, `A1` y fechas: SheetJS lee las fórmulas con su valor guardado. Las 4.500 celdas que dan `""` salen como `null`, `A1` es el texto `"1.0"` y las fechas son texto `aaaa-mm-dd`.
 2. Mismo JSON: `contrato.js` y `web_export.py` dan el mismo objeto en el 24º (jornada 3 en curso) y en el 23º (14 jornadas, grupo B). `publicar.html` escribe `jornada_NN.json` idéntico, byte a byte, salvo `publicado`. También coinciden en los casos S0–S7 de `programas-domino` (con `--ficticio`, porque sus nombres llevan cifras y V06 los bloquea a propósito) y en las jornadas con incomparecencia, No disputado, descanso, retirada y sustitución.
