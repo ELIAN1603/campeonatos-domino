@@ -284,6 +284,14 @@
   }
 
   /* ----- clasificación ----- */
+  // Caja desplazable en horizontal; la clase «mas» enciende la sombra del borde derecho mientras quede tabla por ver.
+  function marco(tabla) {
+    const caja = el('div', { class: 'tabla-caja' }, tabla), m = el('div', { class: 'tabla-marco' }, caja);
+    const ver = () => m.classList.toggle('mas', caja.scrollLeft + caja.clientWidth < caja.scrollWidth - 1);
+    caja.addEventListener('scroll', ver, { passive: true });
+    new ResizeObserver(ver).observe(caja);
+    return m;
+  }
   async function pintarClasificacion(cont) {
     const a = E.actual, tp = tipoDe(a.torneo.tipo);
     const ult = ultimaCompleta(a);
@@ -305,8 +313,8 @@
     const subs = (jd.sustituciones || []);
 
     const cols = sp
-      ? [['gan', 'Gan', tp.gan, 0], ['dp', 'Dif.P', 'Diferencia de partidas', 0], ['dt', 'Dif.T', 'Diferencia de tantos', 0], ['tf', 'TF', 'Tantos a favor', 0], ['jug', 'Jug', 'Encuentros jugados', 1], ['pg', 'PG', 'Partidas ganadas', 1], ['pp', 'PP', 'Partidas perdidas', 1], ['tc', 'TC', 'Tantos en contra', 1]]
-      : [['gan', 'Gan', tp.gan, 0], ['dt', 'Dif.T', 'Diferencia de tantos', 0], ['tf', 'TF', 'Tantos a favor', 0], ['jug', 'Jug', 'Partidas jugadas', 1], ['tc', 'TC', 'Tantos en contra', 1]];
+      ? [['gan', 'Gan', tp.gan], ['dp', 'Dif.P', 'Diferencia de partidas'], ['dt', 'Dif.T', 'Diferencia de tantos'], ['tf', 'TF', 'Tantos a favor'], ['jug', 'Jug', 'Encuentros jugados'], ['pg', 'PG', 'Partidas ganadas'], ['pp', 'PP', 'Partidas perdidas'], ['tc', 'TC', 'Tantos en contra']]
+      : [['gan', 'Gan', tp.gan], ['dt', 'Dif.T', 'Diferencia de tantos'], ['tf', 'TF', 'Tantos a favor'], ['jug', 'Jug', 'Partidas jugadas'], ['tc', 'TC', 'Tantos en contra']];
 
     const cuerpo = filas.map((r) => {
       const p = byId.get(r.id) || { corto: '#' + r.id };
@@ -319,12 +327,12 @@
             r.pendiente && !jd.jornada.completa ? el('span', { class: 'etq pend', title: `Todavía no ha jugado la ${tp.jornada.toLowerCase()} ${n}` }, '⏳') : null),
           el('span', { class: 'sub' }, sub2),
           sub ? el('span', { class: 'sub' }, `Cambio en la ${tp.jornada.toLowerCase()} ${sub.desde}: entra ${sub.entra_nombre} ${sub.entra_apellido1} por ${sub.sale_nombre} ${sub.sale_apellido1}`) : null),
-        cols.map(([k, , , x]) => el('td', { class: (x ? 'x ' : '') + (k === 'gan' ? 'gan' : '') }, k === 'dp' || k === 'dt' ? signo(r[k]) : r[k])));
+        cols.map(([k]) => el('td', { class: k === 'gan' ? 'gan' : null }, k === 'dp' || k === 'dt' ? signo(r[k]) : r[k])));
     });
     const tabla = el('table', { class: 'clasi' },
       el('caption', { class: 'solo-lector' }, `Clasificación del grupo ${g} tras la ${tp.jornada.toLowerCase()} ${n}`),
       el('thead', null, el('tr', null, el('th', { scope: 'col' }, '#'), el('th', { scope: 'col', class: 'izq' }, tp.unidad[0].toUpperCase() + tp.unidad.slice(1)),
-        cols.map(([, t, ab, x]) => el('th', { scope: 'col', class: x ? 'x' : '' }, el('abbr', { title: ab }, t))))),
+        cols.map(([, t, ab]) => el('th', { scope: 'col' }, el('abbr', { title: ab }, t))))),
       el('tbody', null, cuerpo));
     const leyenda = cols.map(([, t, ab]) => `${t}: ${ab.toLowerCase()}`).join(' · ');
 
@@ -334,7 +342,7 @@
       plazo(jd, tp),
       n === vivo ? el('p', { class: 'nota caja' }, `${tp.jornada} ${n} en juego: la clasificación se actualiza con cada resultado. ⏳ = todavía no ha jugado esta ${tp.jornada.toLowerCase()} (lleva sus cifras de antes).`) : null,
       n !== vivo && n === ult && !a.jornada.completa && !vivo ? el('p', { class: 'nota caja' }, `Esta clasificación es la de la ${tp.jornada.toLowerCase()} ${ult}, la última cerrada. En cuanto llegue el primer resultado de la ${tp.jornada.toLowerCase()} ${a.jornada.numero}, la clasificación se verá en vivo.`) : null,
-      filas.length ? el('div', { class: 'tabla-caja' }, tabla) : el('p', { class: 'vacio' }, 'Este grupo todavía no tiene clasificación.'),
+      filas.length ? marco(tabla) : el('p', { class: 'vacio' }, 'Este grupo todavía no tiene clasificación.'),
       el('p', { class: 'leyenda' }, leyenda));
     const f = E.p && $('#fila-' + E.p);
     if (f && !E.yaDesplazado) { E.yaDesplazado = true; f.scrollIntoView({ block: 'center' }); }

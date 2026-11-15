@@ -37,7 +37,7 @@ button, input { font: inherit; color: inherit; }
 .barra a.volver { font-size: .9rem; color: var(--barra-suave); text-decoration: none; }
 .barra a.volver:hover { color: var(--barra-texto); text-decoration: underline; }
 
-main { flex: 1; width: 100%; max-width: 960px; margin: 0 auto; padding: 16px 16px 40px; }
+main { flex: 1; min-width: 0; width: 100%; max-width: 960px; margin: 0 auto; padding: 16px 16px 40px; }
 .banda-prueba { background: var(--marca); color: var(--marca-texto); text-align: center; padding: 6px 12px; font-size: .9rem; font-weight: 600; }
 
 /* portada */
@@ -80,8 +80,8 @@ h2.seccion { font-size: 1.05rem; text-transform: uppercase; letter-spacing: .08e
 .cab h1 { font-size: clamp(1.5rem, 6vw, 2.3rem); line-height: 1.1; margin: 8px 0 6px; letter-spacing: -.02em; font-weight: 800; }
 .cab .linea { color: var(--tinta2); margin: 0; }
 .cab .sello { color: var(--tinta2); font-size: .82rem; margin: 6px 0 0; }
-.pestanas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 18px 0 14px; }
-.pestanas a { padding: 10px 2px; font-size: .92rem; text-align: center; text-decoration: none; font-weight: 700; border-radius: 8px; border: 1.5px solid var(--tinta); }
+.pestanas { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 14px; }
+.pestanas a { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; padding: 10px 8px; font-size: .92rem; text-align: center; text-decoration: none; font-weight: 700; border-radius: 8px; border: 1.5px solid var(--tinta); }
 .pestanas a[aria-current="page"] { background: var(--tinta); color: var(--fondo); }
 .jornadas { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 12px; }
 .jornadas .rot { font-size: .85rem; font-weight: 700; color: var(--tinta2); margin-right: 4px; }
@@ -96,15 +96,21 @@ h2.seccion { font-size: 1.05rem; text-transform: uppercase; letter-spacing: .08e
 h2.sub { font-size: 1.15rem; margin: 6px 0 10px; }
 
 /* clasificación */
-.tabla-caja { background: var(--papel); border: 1px solid var(--linea); border-radius: var(--radio); overflow: hidden; }
-table.clasi { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.tabla-caja { background: var(--papel); border: 1px solid var(--linea); border-radius: var(--radio); overflow-x: auto; }
+/* clasificación: si no cabe, se desplaza dentro de su caja; # y pareja quedan fijos; la sombra del borde dice que hay más */
+.tabla-marco { position: relative; }
+.tabla-marco::after { content: ""; position: absolute; top: 1px; bottom: 1px; right: 1px; width: 28px; border-radius: 0 var(--radio) var(--radio) 0; pointer-events: none; opacity: 0; transition: opacity .15s; background: linear-gradient(to left, rgba(0, 0, 0, .3), transparent); }
+.tabla-marco.mas::after { opacity: 1; }
+table.clasi { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .92rem; }
 .clasi th { text-align: right; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--tinta2); padding: 8px 6px; border-bottom: 2px solid var(--tinta); font-weight: 700; }
 .clasi th:first-child, .clasi th.izq { text-align: left; }
 .clasi td { padding: 9px 6px; border-bottom: 1px solid var(--linea); text-align: right; vertical-align: top; white-space: nowrap; }
 .clasi tr:last-child td { border-bottom: 0; }
 .clasi td:first-child { padding-left: 10px; }
 .clasi td:last-child, .clasi th:last-child { padding-right: 10px; }
-.clasi td.pareja { text-align: left; white-space: normal; width: 99%; }
+.clasi td.pareja { text-align: left; white-space: normal; overflow-wrap: break-word; width: 99%; min-width: 8.5rem; }
+.clasi th:first-child, .clasi td:first-child { position: sticky; left: 0; z-index: 1; min-width: 46px; background-color: var(--papel); }
+.clasi th:nth-child(2), .clasi td:nth-child(2) { position: sticky; left: 46px; z-index: 1; background-color: var(--papel); border-right: 1px solid var(--linea); }
 .clasi .puesto { display: inline-grid; place-items: center; min-width: 26px; height: 26px; border-radius: 50%; font-weight: 800; font-size: .85rem; }
 .clasi .p1 { background: var(--oro); color: var(--medalla-texto); }
 .clasi .p2 { background: var(--plata); color: var(--medalla-texto); }
@@ -112,10 +118,10 @@ table.clasi { width: 100%; border-collapse: collapse; font-size: .92rem; }
 .clasi .nom { font-weight: 700; display: block; }
 .clasi .sub { display: block; font-size: .8rem; color: var(--tinta2); font-weight: 400; line-height: 1.3; }
 .clasi .gan { font-weight: 800; }
-.clasi .x { display: none; }
 .clasi tr.ret td { color: var(--tinta2); }
 .clasi tr.ret .nom { text-decoration: line-through; text-decoration-thickness: 1px; }
-tr.resalte td, li.resalte { background: var(--marca-suave); }
+li.resalte { background: var(--marca-suave); }
+tr.resalte td { background-image: linear-gradient(var(--marca-suave), var(--marca-suave)); }
 .etq { display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 1px 6px; border-radius: 5px; border: 1.5px solid currentColor; color: var(--tinta2); margin-left: 4px; vertical-align: 1px; }
 .etq.alerta { color: var(--marca); }
 .etq.pend { border: none; padding: 0 2px; font-size: .9rem; letter-spacing: 0; }
@@ -170,7 +176,6 @@ footer.pie { background: var(--barra); color: var(--barra-suave); font-size: .88
   .pestanas { display: flex; gap: 6px; border-bottom: 2px solid var(--tinta); }
   .pestanas a { border: 0; border-radius: 8px 8px 0 0; padding: 10px 18px; color: var(--tinta2); }
   .pestanas a[aria-current="page"] { color: var(--fondo); }
-  .clasi .x { display: table-cell; }
   .clasi { font-size: 1rem; }
   .clasi td, .clasi th { padding-left: 10px; padding-right: 10px; }
   .tarjetas { grid-template-columns: 1fr 1fr; }
@@ -191,7 +196,7 @@ footer.pie { background: var(--barra); color: var(--barra-suave); font-size: .88
 .vals label { display: flex; gap: 8px; align-items: flex-start; }
 .vals .cod { font-size: .72rem; font-weight: 700; color: var(--tinta2); margin-right: 6px; }
 .resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin: 10px 0; }
-.resumen div { background: var(--fondo); border-radius: 8px; padding: 8px 10px; }
+.resumen div { min-width: 0; overflow-wrap: anywhere; background: var(--fondo); border-radius: 8px; padding: 8px 10px; }
 .resumen b { display: block; font-size: 1.25rem; }
 .resumen span { font-size: .8rem; color: var(--tinta2); }
 .acciones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
@@ -210,8 +215,8 @@ footer.pie { background: var(--barra); color: var(--barra-suave); font-size: .88
 .lista-parejas tr.ret .nom { color: var(--tinta2); text-decoration: line-through; text-decoration-thickness: 1px; }
 .calendario h2, .folleto h2 { font-size: 1.05rem; margin: 0 0 8px; }
 .calendario ol { list-style: none; margin: 0 0 20px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
-.calendario li { display: grid; grid-template-rows: auto auto; background: var(--papel); border: 1.5px solid var(--tinta); border-radius: 8px; overflow: hidden; }
-.calendario .num { display: flex; align-items: baseline; gap: 6px; padding: 6px 10px; font-size: 1.3rem; font-weight: 800; line-height: 1.1; border-bottom: 1.5px solid var(--tinta); }
+.calendario li { display: grid; grid-template-rows: auto auto; background: var(--papel); border: 1.5px solid var(--tinta); border-radius: 8px; }
+.calendario .num { display: flex; flex-wrap: wrap; align-items: baseline; border-radius: 6.5px 6.5px 0 0; gap: 6px; padding: 6px 10px; font-size: 1.3rem; font-weight: 800; line-height: 1.1; border-bottom: 1.5px solid var(--tinta); }
 .calendario .num small { font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: var(--tinta2); }
 .calendario .b { margin-left: auto; font-size: .8rem; border: 1.5px solid currentColor; border-radius: 5px; padding: 0 5px; }
 .calendario .fechas { padding: 6px 10px; font-size: .92rem; font-variant-numeric: tabular-nums; }

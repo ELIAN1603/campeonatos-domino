@@ -1,0 +1,124 @@
+// Prueba de que la web se ve entera en cualquier dispositivo: nada se oculta, nada se corta, la página no se desplaza en horizontal.
+// Regla fija del plan (Anexo A, «Web en cualquier dispositivo»). Uso: node pruebas/probar_dispositivos.cjs [url-base] [carpeta-de-capturas]
+const fs = require('fs'), os = require('os'), path = require('path');
+const { execFileSync } = require('child_process');
+const { chromium } = require('playwright');
+const base = process.argv[2] || 'http://localhost:8765';
+const capt = process.argv[3];
+const raiz = path.join(__dirname, '..');
+const TAMANOS = [[320, 640], [360, 780], [390, 844], [412, 915], [667, 375], [768, 1024], [1280, 800]];
+const D = 'd=datos/_prueba';
+const PESTANAS = ['', 'mesas', 'parejas', 'folleto'];
+
+// Se ejecuta en la página. Devuelve la lista de fallos (texto).
+function revisar() {
+  const fallos = [];
+  const nombre = (e) => e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/).join('.') : '') + ' «' + (e.textContent || '').trim().slice(0, 40) + '»';
+  const iw = document.documentElement.clientWidth;
+  // (a) la página no se desplaza en horizontal
+  if (document.documentElement.scrollWidth > iw || document.body.scrollWidth > iw) fallos.push(`(a) la página se desplaza en horizontal: ${document.documentElement.scrollWidth} > ${iw}`);
+  const todos = [...document.body.querySelectorAll('*')].filter((e) => !['SCRIPT', 'STYLE', 'TEMPLATE', 'NOSCRIPT'].includes(e.tagName) && !e.closest('.solo-lector'));
+  const scroller = (e) => /auto|scroll/.test(getComputedStyle(e).overflowX);
+  for (const e of todos) {
+    const s = getComputedStyle(e);
+    const conTexto = (e.textContent || '').trim() !== '';
+    // (b) datos ocultos
+    if (conTexto && (s.display === 'none' || s.visibility === 'hidden') && !e.closest('[hidden]')) fallos.push('(b) oculto con datos: ' + nombre(e).replace(/ «.*»$/, ''));
+    if (s.display === 'none') continue;
+    // (c) overflow hidden/clip que recorta
+    if (/hidden|clip/.test(s.overflowX + s.overflowY) && (e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1))
+      fallos.push(`(c) recorta (${e.scrollWidth}x${e.scrollHeight} en ${e.clientWidth}x${e.clientHeight}): ` + nombre(e));
+    // (f) el contenido se sale de su caja sin que haya desplazamiento
+    if (!scroller(e) && s.display !== 'inline' && s.display !== 'contents' && !/table-(row|column)/.test(s.display) && e.clientWidth && e.scrollWidth > e.clientWidth + 1 && !/hidden|clip/.test(s.overflowX))
+      fallos.push(`(f) se sale de su caja (${e.scrollWidth} > ${e.clientWidth}): ` + nombre(e));
+  }
+  // (e) texto visible fuera de la ventana (si lo tapa una caja desplazable, vale: se llega con el desplazamiento)
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let t; (t = w.nextNode());) {
+    const e = t.parentElement;
+    if (!t.nodeValue.trim() || !e || e.closest('.solo-lector, [hidden], script, style')) continue;
+    if (getComputedStyle(e).display === 'none' || getComputedStyle(e).visibility === 'hidden') continue;
+    const r = document.createRange(); r.selectNodeContents(t);
+    for (const q of r.getClientRects()) {
+      if (!q.width) continue;
+      let dentro = false; for (let a = e; a && a !== document.body; a = a.parentElement) if (scroller(a)) { dentro = true; break; }
+      if (!dentro && (q.right > iw + 1 || q.left < -1)) { fallos.push(`(e) texto fuera de la ventana: «${t.nodeValue.trim().slice(0, 40)}» (${Math.round(q.left)}–${Math.round(q.right)} de ${iw})`); break; }
+    }
+  }
+  return fallos;
+}
+
+// (d) en la clasificación se llega hasta TC
+function llegaATC() {
+  const caja = document.querySelector('.tabla-caja'); const tabla = caja && caja.querySelector('table.clasi');
+  if (!tabla) return ['(d) no hay tabla de clasificación'];
+  const f = [];
+  const cab = [...tabla.querySelectorAll('thead th')].map((t) => t.textContent.trim());
+  for (const c of ['Jug', 'PG', 'PP', 'TC']) if (!cab.includes(c)) f.push('(d) falta la columna ' + c);
+  caja.scrollLeft = 1e6;
+  const tc = [...tabla.querySelectorAll('thead th')].find((t) => t.textContent.trim() === 'TC');
+  if (!tc) return f;
+  const a = tc.getBoundingClientRect(), b = caja.getBoundingClientRect();
+  if (getComputedStyle(tc).display === 'none' || a.width === 0) f.push('(d) TC oculta');
+  else if (a.right > b.right + 1 || a.left < b.left - 1) f.push(`(d) no se llega a TC: ${Math.round(a.left)}–${Math.round(a.right)} fuera de ${Math.round(b.left)}–${Math.round(b.right)}`);
+  caja.scrollLeft = 0;
+  return f;
+}
+
+(async () => {
+  const b = await chromium.launch();
+  const fallos = []; let n = 0;
+  const xl = fs.mkdtempSync(path.join(os.tmpdir(), 'tumesa-disp-'));
+  const excel = path.join(xl, 'largos.xlsx');
+  execFileSync('python3', [path.join(__dirname, 'hacer_xlsx.py'), path.join(raiz, 'datos/_prueba/nombres-largos/actual.json'), excel]);
+
+  for (const [w, h] of TAMANOS) {
+    const ctx = await b.newContext({ viewport: { width: w, height: h } });
+    const pg = await ctx.newPage();
+    await pg.route('https://api.github.com/**', (r) => {
+      if (/\/contents\//.test(r.request().url())) return r.fulfill({ status: 404, body: '{"message":"Not Found"}' });
+      return r.fulfill({ status: 200, contentType: 'application/json', body: '{"permissions":{"push":true}}' });
+    });
+    const mira = async (donde, extra) => {
+      n++;
+      const f = [...await pg.evaluate(revisar), ...(extra ? await pg.evaluate(extra) : [])];
+      for (const x of f) fallos.push(`${w}x${h} · ${donde} · ${x}`);
+    };
+
+    await pg.goto(`${base}/index.html?${D}`); await pg.waitForSelector('.tarjeta');
+    await mira('portada');
+    await pg.fill('#buscar', 'pons'); await pg.waitForSelector('.persona .puesto:not(:text("…"))'); await pg.waitForTimeout(200);
+    await mira('portada · buscador');
+    await pg.fill('#buscar', 'zzzz'); await pg.waitForSelector('text=No hay nadie'); await mira('portada · sin resultados');
+
+    for (const [t, q] of [['sp-2026-27', ''], ['nombres-largos', D + '&']]) {
+      for (const ver of PESTANAS) {
+        await pg.goto(`${base}/torneo.html?${q}t=${t}${ver ? '&ver=' + ver : ''}`);
+        await pg.waitForSelector(ver === 'folleto' ? '.calendario, .vacio' : ver === 'parejas' ? '.lista-parejas' : ver === 'mesas' ? '.mesa' : 'table.clasi');
+        await mira(`${t} · ${ver || 'clasificación'}`, !ver ? llegaATC : null);
+        if (capt && t === 'sp-2026-27' && !ver && (w === 360 || w === 390)) {
+          fs.mkdirSync(capt, { recursive: true });
+          await pg.evaluate(() => document.querySelector('.tabla-marco').scrollIntoView());
+          await pg.screenshot({ path: `${capt}/clasificacion_24_${w}_inicio.png` });
+          await pg.evaluate(() => { document.querySelector('.tabla-caja').scrollLeft = 1e6; });
+          await pg.waitForTimeout(150);
+          await pg.screenshot({ path: `${capt}/clasificacion_24_${w}_final.png` });
+        }
+      }
+    }
+
+    await pg.goto(`${base}/publicar.html`);
+    await mira('publicar · inicio');
+    await pg.fill('#token', 'ghp_TOKEN_DE_PRUEBA'); await pg.click('text=Guardar y comprobar'); await pg.waitForSelector('text=Hay un token guardado');
+    await pg.setInputFiles('#archivo', excel);
+    await pg.waitForSelector('#paso-revision:not([hidden]) .resumen');
+    await pg.click('#revision summary');
+    await mira('publicar · revisión');
+    await ctx.close();
+  }
+  await b.close();
+  const unicos = [...new Set(fallos)];
+  console.log(`${n} comprobaciones en ${TAMANOS.length} tamaños`);
+  if (unicos.length) { console.log(unicos.slice(0, 60).join('\n')); if (unicos.length > 60) console.log(`… y ${unicos.length - 60} más`); console.log(`FALLA: ${unicos.length} fallos`); process.exit(1); }
+  console.log('Todo en verde.');
+})().catch((e) => { console.error(e); process.exit(1); });

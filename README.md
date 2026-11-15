@@ -16,7 +16,7 @@ Este repositorio es público. **Nunca entra un Excel, un teléfono ni una licenc
 | `assets/` | Estilo, código de la web, código del contrato de datos y SheetJS (copia local, sin CDN) |
 | `datos/indice.json` | Lista de campeonatos que ve la portada. Lo escribe `publicar.html` |
 | `datos/<id>/` | `jornada_NN.json` (una foto por jornada), `actual.json` y, si lo hay, `folleto.pdf` |
-| `datos/_prueba/` | Datos inventados para probar. No salen en `indice.json`. `sp-calendario` es un SP con calendario y grupo B firme desde la jornada 12 |
+| `datos/_prueba/` | Datos inventados para probar. No salen en `indice.json`. `sp-calendario` es un SP con calendario y grupo B firme desde la jornada 12; `nombres-largos` lleva nombres, zonas y título muy largos |
 | `pruebas/` | Pruebas automáticas |
 
 El formato de los JSON y de la hoja WEB está en `docs/W2_contrato_datos.md` del repositorio `programas-domino`.
@@ -27,6 +27,7 @@ El formato de los JSON y de la hoja WEB está en `docs/W2_contrato_datos.md` del
 - Clasificación y Mesas llevan una fila de botones redondos, uno por jornada publicada, con la jornada en curso marcada. Mesas se abre en la jornada en curso y enseña una tarjeta por mesa: número, las dos parejas de esa jornada y el resultado (partidas y tantos; ⏳ si falta; una etiqueta en ND, incomparecencia, descanso y retirada). Los enlaces antiguos `ver=resultados` y `ver=emparejamientos` llevan a Mesas.
 - Bajo los botones de jornada, sale «Jornada N · se juega del dd/mm al dd/mm» con `plazo_desde` y `plazo_hasta`; si están vacíos no sale nada.
 - Calendario (`ver=folleto`) lee la clave opcional `calendario` de `actual.json` (sin ella avisa de que no hay calendario) y enseña una tarjeta por jornada con sus fechas y el año (`13/10 – 26/10/2026`; si cruza de año, `15/12/2026 – 4/1/2027`). Los enlaces antiguos `ver=linea` llevan aquí.
+- Ningún dato se oculta ni se corta, desde 320 px de ancho y en vertical y horizontal. Clasificación enseña todas las columnas: si no caben, la tabla se desplaza dentro de su caja con el puesto y la pareja fijos y una sombra a la derecha mientras quede más por ver. Los nombres largos se parten en varias líneas y la página nunca se desplaza en horizontal.
 - La web no enseña criterios de clasificación; la leyenda de columnas sí.
 - Cada jornada conserva los nombres que tenía cuando se publicó, así que una sustitución no reescribe las anteriores.
 - Mientras un campeonato está en juego, la página pide `actual.json` cada 60 segundos y se detiene si la pestaña está oculta.
@@ -51,11 +52,13 @@ node pruebas/probar_contrato.cjs
 node pruebas/probar_publicar.cjs
 node pruebas/probar_web.cjs
 node pruebas/probar_seguridad.cjs
+node pruebas/probar_dispositivos.cjs
 ```
 
 - `probar_contrato.cjs` crea un `.xlsx` pequeño con la hoja WEB (con `hacer_xlsx.py`), lo lee con SheetJS y comprueba que sale el mismo JSON que los ejemplos, y que cada validación V01 a V19 salta cuando toca. El `.xlsx` queda en la carpeta temporal y se borra.
 - `probar_publicar.cjs` abre `publicar.html` en Chromium con una API de GitHub simulada y publica de verdad contra ella.
 - `probar_web.cjs` recorre la web a 390 px y a 1280 px: buscador, pestañas, jornadas, grupos, filtro, fechas de juego, calendario, estados raros y que nada desborde. Con una carpeta como segundo argumento guarda capturas.
+- `probar_dispositivos.cjs` abre portada, torneo (las cuatro pestañas, con el 24º real y con `datos/_prueba/nombres-largos`) y `publicar.html` con un Excel de prueba en 320×640, 360×780, 390×844, 412×915, 667×375, 768×1024 y 1280×800. Falla si la página se desplaza en horizontal, si un dato queda con `display:none` o `visibility:hidden` fuera de un `[hidden]`, si algo con `overflow` hidden o clip recorta contenido, si un texto se sale de su caja o de la ventana, o si en Clasificación no se llega con el desplazamiento hasta TC. Con una carpeta como segundo argumento guarda capturas de la clasificación del 24º a 360 y 390 px.
 - `probar_seguridad.cjs` comprueba la CSP y las demás etiquetas `<meta>` de las tres páginas, `robots.txt`, que las páginas cargan sin violaciones en consola y que los enlaces externos solo valen con https. `probar_publicar.cjs` comprueba además autor y committer de cada PUT, el rechazo de rutas fuera de `datos/` y el borrado del token ante un 401.
 - `probar_excel_real.cjs` necesita un Excel real; ver la sección siguiente.
 

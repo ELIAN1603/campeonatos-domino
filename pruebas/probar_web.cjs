@@ -68,7 +68,8 @@ const D = 'd=datos/_prueba';
     await pg.click('.jornadas button:has-text("3")');
     await pg.waitForFunction(() => document.querySelector('table.clasi caption').textContent.includes('jornada 3'));
     if (capt) await pg.screenshot({ path: `${capt}/clasi_${w}.png`, fullPage: true });
-    // los números caben en 390: la columna TF se ve entera
+    // al desplazar la caja hasta el final, la última columna se ve entera
+    await pg.evaluate(() => { document.querySelector('.tabla-caja').scrollLeft = 1e6; });
     const caja = await pg.locator('.tabla-caja').boundingBox(); const ult = await pg.locator('table.clasi th:visible').last().boundingBox();
     assert(ult.x + ult.width <= caja.x + caja.width + 1, 'última columna recortada');
     bien('la tabla de clasificación cabe sin desplazar');
