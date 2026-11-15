@@ -24,6 +24,8 @@
     sustituciones: { titulo: 'SUSTITUCIONES', col: 42, filas: [4, 53],
       cab: ['id', 'desde', 'sale_nombre', 'sale_apellido1', 'entra_nombre', 'entra_apellido1'], tipo: ['i', 'i', 't', 't', 't', 't'] },
   };
+  // bloque opcional (solo el SP): si la hoja WEB lo trae, el JSON lleva la clave `calendario`
+  const CAL = { titulo: 'CALENDARIO', col: 49, filas: [4, 17], cab: ['jornada', 'jornada_b', 'desde', 'hasta'], tipo: ['i', 'i', 't', 't'] };
   const ESTADOS_MESA = ['pendiente', 'jugada', 'incomparecencia', 'retirada', 'descanso', 'nd', 'ausencia', 'no_cuenta'];
   const TIPOS = ['sp', 'parejas', 'individual'];
   const NOMBRES_PERSONA = { participantes: ['j1_nombre', 'j1_apellido1', 'j2_nombre', 'j2_apellido1', 'corto', 'zona'], sustituciones: ['sale_nombre', 'sale_apellido1', 'entra_nombre', 'entra_apellido1'] };
@@ -67,7 +69,9 @@
       if (TIPO_META[k] === 'i' && v != null) r.tipos.push([ref(1, 4 + i), v]);
     });
     // bloques
-    for (const [nombre, b] of Object.entries(B)) {
+    const opc = valor(CAL.col, 2) === CAL.titulo ? { calendario: CAL } : {};
+    if (opc.calendario) { r.calendario = []; CAL.cab.forEach((k, i) => esp(CAL.col + i, 3, k)); }
+    for (const [nombre, b] of Object.entries({ ...B, ...opc })) {
       for (let f = b.filas[0]; f <= b.filas[1]; f++) {
         const fila = {};
         let vacia = true;
@@ -106,7 +110,9 @@
       grupo: f.grupo, mesa: f.mesa, mesa_grupo: f.mesa_grupo, izq: lista(f.izq1, f.izq2), dcha: lista(f.dcha1, f.dcha2), estado: f.estado, ausentes: ids(f.ausentes),
       p_izq: f.p_izq, p_dcha: f.p_dcha, t_izq: f.t_izq, t_dcha: f.t_dcha,
     }));
-    return { version: r.version, publicado, torneo, jornada, participantes, sustituciones, clasificacion, emparejamientos };
+    const j = { version: r.version, publicado, torneo, jornada, participantes, sustituciones, clasificacion, emparejamientos };
+    if (r.calendario) j.calendario = r.calendario.map((f) => ordenClaves(f, CAL.cab));
+    return j;
   }
 
   /* ---------- validación (sección 4 del contrato) ---------- */
